@@ -196,7 +196,7 @@
                 </div>
             </div>
 
-            <!-- KOLOM KANAN: Status Pembayaran -->
+            <!-- KOLOM KANAN: Status Pembayaran (DIPERBAIKI) -->
             <div class="col-md-4">
                 <div class="card border-0 rounded-4 shadow-sm mb-4 sticky-lg-top hover-card" style="top: 20px;">
                     <div class="card-header bg-white rounded-top-4 py-3" style="border-bottom: 2px solid #ffc107;">
@@ -225,29 +225,55 @@
                             @endif
                         </div>
 
-                        <!-- Batas Waktu Pembayaran -->
-                        @if($pesanan->status == 'menunggu_pembayaran' && $pesanan->status_pembayaran == 'belum_bayar')
-                        <div class="alert-warning-custom mb-3 text-start">
-                            <i class="bi bi-clock me-2"></i>
-                            <strong>Batas pembayaran:</strong><br>
-                            {{ \Carbon\Carbon::parse($pesanan->expired_at)->locale('id')->translatedFormat('d F Y H:i') }}
-                            WIB
-                            @if(now() > $pesanan->expired_at)
-                            <br><span class="text-danger">⚠️ Pesanan sudah kadaluarsa!</span>
-                            @endif
+                        <!-- 🔥 PESANAN YANG DIBATALKAN OTOMATIS KARENA EXPIRED -->
+                        @if($pesanan->status == 'dibatalkan' && $pesanan->expired_at < now())
+                        <div class="alert-expired-custom mb-3 text-start">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-exclamation-triangle-fill fs-4 text-danger"></i>
+                                <strong class="text-danger">Pesanan Dibatalkan Otomatis!</strong>
+                            </div>
+                            <div class="small">
+                                <i class="bi bi-clock-history me-1"></i> 
+                                <strong>Batas waktu pembayaran:</strong> 
+                                {{ \Carbon\Carbon::parse($pesanan->expired_at)->locale('id')->translatedFormat('d F Y H:i') }} WIB
+                            </div>
+                            <div class="small mt-2 text-danger">
+                                <i class="bi bi-info-circle me-1"></i> 
+                                Pesanan dibatalkan karena melewati batas waktu pembayaran. Anda tidak dapat upload bukti pembayaran lagi.
+                            </div>
                         </div>
-                        @endif
 
-                        <!-- Status Messages -->
-                        @if($pesanan->status == 'dibatalkan')
+                        <!-- 🔥 PESANAN YANG DIBATALKAN OLEH USER (BUKAN EXPIRED) -->
+                        @elseif($pesanan->status == 'dibatalkan')
                         <div class="alert-success-custom text-center mb-3">
                             <i class="bi bi-check-circle me-2"></i>
                             <strong>✓ Pesanan Dibatalkan</strong>
+                            <div class="small mt-1">Pesanan dibatalkan atas permintaan Anda.</div>
                         </div>
+
+                        <!-- 🔥 PESANAN YANG MASIH MENUNGGU PEMBAYARAN TAPI SUDAH EXPIRED -->
                         @elseif($pesanan->status_pembayaran == 'belum_bayar' && $pesanan->status != 'dibatalkan')
-                        <div class="alert-warning-custom mb-3 text-start">
-                            <i class="bi bi-info-circle me-2"></i> Silakan lakukan pembayaran untuk melanjutkan pesanan.
-                        </div>
+                            @if(isset($pesanan->expired_at) && now() > $pesanan->expired_at)
+                            <div class="alert-expired-custom mb-3 text-start">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="bi bi-exclamation-triangle-fill fs-4 text-danger"></i>
+                                    <strong class="text-danger">⚠️ Waktu Pembayaran Habis!</strong>
+                                </div>
+                                <div class="small">
+                                    <i class="bi bi-clock-history me-1"></i> 
+                                    <strong>Batas waktu:</strong> 
+                                    {{ \Carbon\Carbon::parse($pesanan->expired_at)->locale('id')->translatedFormat('d F Y H:i') }} WIB
+                                </div>
+                                <div class="small mt-2 text-danger">
+                                    <i class="bi bi-info-circle me-1"></i> 
+                                    Pesanan akan segera dibatalkan otomatis. Silakan buat pesanan baru.
+                                </div>
+                            </div>
+                            @else
+                            <div class="alert-warning-custom mb-3 text-start">
+                                <i class="bi bi-info-circle me-2"></i> Silakan lakukan pembayaran untuk melanjutkan pesanan.
+                            </div>
+                            @endif
                         @elseif($pesanan->status_pembayaran == 'menunggu_konfirmasi')
                         <div class="alert-info-custom mb-3 text-start">
                             <i class="bi bi-clock-history me-2"></i> Bukti pembayaran telah diupload. Menunggu
@@ -260,38 +286,45 @@
                         </div>
                         @endif
 
-                        <!-- ========== TOMBOL AKSI (EDIT TELAH DIHAPUS) ========== -->
+                        <!-- Batas Waktu Pembayaran (untuk pesanan yang belum dibayar dan belum expired) -->
+                        @if($pesanan->status == 'menunggu_pembayaran' && $pesanan->status_pembayaran == 'belum_bayar' && $pesanan->expired_at > now())
+                        <div class="alert-warning-custom mb-3 text-start">
+                            <i class="bi bi-clock me-2"></i>
+                            <strong>Batas pembayaran:</strong><br>
+                            {{ \Carbon\Carbon::parse($pesanan->expired_at)->locale('id')->translatedFormat('d F Y H:i') }}
+                            WIB
+                        </div>
+                        @endif
+
+                        <!-- ========== TOMBOL AKSI (UPLOAD BUKTI & BATALKAN) ========== -->
                         @if($pesanan->status_pembayaran == 'belum_bayar' && $pesanan->status != 'dibatalkan')
-                        <!-- 🔥 TOMBOL UPLOAD BUKTI HANYA TAMPIL JIKA BELUM EXPIRED -->
-                        @if(isset($pesanan->expired_at) && now() <= $pesanan->expired_at)
-                            <button type="button" class="btn btn-success rounded-pill w-100"
-                                onclick="openUploadModal()">
-                                <i class="bi bi-credit-card me-2"></i> Upload Bukti Pembayaran
-                            </button>
+                            <!-- 🔥 TOMBOL UPLOAD BUKTI HANYA TAMPIL JIKA BELUM EXPIRED -->
+                            @if(isset($pesanan->expired_at) && now() <= $pesanan->expired_at)
+                                <button type="button" class="btn btn-success rounded-pill w-100" onclick="openUploadModal()">
+                                    <i class="bi bi-credit-card me-2"></i> Upload Bukti Pembayaran
+                                </button>
                             @else
-                            <div class="alert alert-warning mt-2 mb-0 text-start">
-                                <i class="bi bi-clock-history me-2"></i> Waktu pembayaran sudah habis. Anda tidak dapat
-                                upload bukti lagi.
-                            </div>
+                                <div class="alert-expired-custom mt-2 mb-0 text-start">
+                                    <i class="bi bi-clock-history me-2"></i> 
+                                    <strong>Waktu pembayaran sudah habis.</strong> Anda tidak dapat upload bukti lagi.
+                                </div>
                             @endif
-                            @endif
+                        @endif
 
-                            <!-- Tombol Lihat Bukti -->
-                            @if($pesanan->status_pembayaran == 'menunggu_konfirmasi' && $pesanan->bukti_pembayaran)
-                            <a href="{{ asset($pesanan->bukti_pembayaran) }}" target="_blank"
-                                class="btn btn-outline-info rounded-pill w-100 mt-2">
-                                <i class="bi bi-image me-2"></i> Lihat Bukti Pembayaran
-                            </a>
-                            @endif
+                        <!-- Tombol Lihat Bukti -->
+                        @if($pesanan->status_pembayaran == 'menunggu_konfirmasi' && $pesanan->bukti_pembayaran)
+                        <a href="{{ asset($pesanan->bukti_pembayaran) }}" target="_blank"
+                            class="btn btn-outline-info rounded-pill w-100 mt-2">
+                            <i class="bi bi-image me-2"></i> Lihat Bukti Pembayaran
+                        </a>
+                        @endif
 
-                            <!-- Tombol Batalkan -->
-                            @if($pesanan->status == 'menunggu_pembayaran' && $pesanan->status_pembayaran ==
-                            'belum_bayar')
-                            <button class="btn btn-outline-danger rounded-pill w-100 mt-3"
-                                onclick="batalkanPesanan(this)">
-                                <i class="bi bi-x-circle me-2"></i> Batalkan Pesanan
-                            </button>
-                            @endif
+                        <!-- Tombol Batalkan (HANYA UNTUK PESANAN YANG BELUM EXPIRED DAN BELUM DIBATALKAN) -->
+                        @if($pesanan->status == 'menunggu_pembayaran' && $pesanan->status_pembayaran == 'belum_bayar' && $pesanan->expired_at > now())
+                        <button class="btn btn-outline-danger rounded-pill w-100 mt-3" onclick="batalkanPesanan(this)">
+                            <i class="bi bi-x-circle me-2"></i> Batalkan Pesanan
+                        </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -564,6 +597,15 @@
     border-radius: 12px;
 }
 
+/* 🔥 ALERT EXPIRED (KADALUARSA) */
+.alert-expired-custom {
+    background: linear-gradient(135deg, #fff8e1, #ffecb3);
+    border-left: 4px solid #dc3545;
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: #856404;
+}
+
 .alert-wa-custom {
     position: relative;
     background: linear-gradient(135deg, #25D366, #128C7E);
@@ -630,7 +672,6 @@
         opacity: 0;
         transform: translateY(-10px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -702,17 +743,9 @@
 }
 
 @keyframes pulse {
-    0% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.7;
-    }
-
-    100% {
-        opacity: 1;
-    }
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
 }
 
 .status-icon-success i {
@@ -854,12 +887,10 @@
         max-width: 95% !important;
         border-radius: 24px !important;
     }
-
     .bank-card {
         padding: 10px 12px !important;
         gap: 10px !important;
     }
-
     .custom-toast {
         left: 20px;
         right: 20px;
@@ -874,12 +905,10 @@
         top: 0;
         margin-top: 20px;
     }
-
     .breadcrumb {
         font-size: 0.8rem;
         flex-wrap: wrap;
     }
-
     .table th,
     .table td {
         font-size: 0.8rem;
