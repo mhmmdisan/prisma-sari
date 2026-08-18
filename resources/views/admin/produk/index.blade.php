@@ -59,7 +59,7 @@
                     <thead>
                         <tr>
                             <th style="width: 8%">Gambar</th>
-                            <th>Nama Produk</th>
+                            <th class="text-center">Nama Produk</th>
                             <th class="text-center">Kategori</th>
                             <th class="text-center">Harga</th>
                             <th class="text-center">Min Order</th>

@@ -63,16 +63,34 @@
         gap: 12px;
     }
 
+    /*  LOGO - DIPERBESAR */
     .brand-icon {
-        width: 40px;
-        height: 40px;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.3rem;
-        color: #ffc107;
+        background: none !important;
+        border-radius: 0 !important;
+        width: auto;
+        height: auto;
+        padding: 0;
+    }
+
+    .brand-icon img {
+        height: 55px;
+        width: auto;
+        filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+        transition: transform 0.3s ease;
+        display: block;
+    }
+
+    .brand-icon img:hover {
+        transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+        .brand-icon img {
+            height: 45px;
+        }
     }
 
     .brand-text {
@@ -264,11 +282,6 @@
         .brand-subtitle {
             display: none;
         }
-
-        .brand-icon {
-            width: 35px;
-            height: 35px;
-        }
     }
 
     /* Custom Scrollbar */
@@ -304,8 +317,9 @@
                     <i class="bi bi-list"></i>
                 </button>
                 <div class="navbar-brand-wrapper">
+                    <!--  Logo diganti dengan gambar Prisma Sari (diperbesar) -->
                     <div class="brand-icon">
-                        <i class="bi bi-shield-lock-fill"></i>
+                        <img src="{{ asset('images/logowebsite.png') }}" alt="Prisma Sari Catering">
                     </div>
                     <div class="brand-text">
                         <span class="brand-title">
@@ -328,7 +342,7 @@
                 <form method="POST" action="{{ route('logout') }}" class="d-inline">
                     @csrf
                     <button type="submit" class="btn-logout">
-                        <i class="bi bi-box-arrow-right me-1"></i> Logout
+                        <i class="bi bi-box-arrow-right me-1" ></i> Logout
                     </button>
                 </form>
             </div>
@@ -347,31 +361,31 @@
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.produk.*') ? 'active' : '' }}"
                     href="{{ route('admin.produk.index') }}">
-                    <i class="bi bi-box"></i> Produk
+                    <i class="bi bi-box"></i> Kelola Produk
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.pesanan.index') ? 'active' : '' }}"
                     href="{{ route('admin.pesanan.index') }}">
-                    <i class="bi bi-receipt"></i> Pesanan
+                    <i class="bi bi-receipt"></i> Kelola Pesanan
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.pesanan.create-manual') ? 'active' : '' }}"
                     href="{{ route('admin.pesanan.create-manual') }}">
-                    <i class="bi bi-whatsapp"></i> Tambah WA Order
+                    <i class="bi bi-whatsapp"></i> Whatsapp Order
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.metode-pembayaran.*') ? 'active' : '' }}"
                     href="{{ route('admin.metode-pembayaran.index') }}">
-                    <i class="bi bi-credit-card"></i> Metode Pembayaran
+                    <i class="bi bi-credit-card"></i> Kelola Metode Pembayaran
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.tanggal.*') ? 'active' : '' }}"
                     href="{{ route('admin.tanggal.index') }}">
-                    <i class="bi bi-calendar-x"></i> Tanggal Nonaktif
+                    <i class="bi bi-calendar-x"></i> Kelola Tanggal Pesanan
                 </a>
             </li>
             <li class="nav-item">

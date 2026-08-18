@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\TanggalNonaktif; // 🔥 TAMBAHKAN INI
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -14,7 +15,8 @@ class TanggalController extends Controller
      */
     public function index()
     {
-        $tanggalNonaktif = DB::table('tanggal_nonaktif')
+        // 🔥 UBAH dari DB::table() menjadi Eloquent dengan relasi
+        $tanggalNonaktif = TanggalNonaktif::with('createdBy') // eager loading relasi
             ->orderBy('tanggal', 'desc')
             ->paginate(15);
         
@@ -38,13 +40,14 @@ class TanggalController extends Controller
                 ->exists();
             
             if ($exists) {
-                // Jika sudah ada, update status menjadi 'nonaktif'
+                // Jika sudah ada, update status menjadi 'nonaktif' dan created_by (jika null)
                 DB::table('tanggal_nonaktif')
                     ->where('tanggal', $request->tanggal)
                     ->update([
                         'status' => 'nonaktif',
                         'keterangan' => $request->keterangan,
                         'updated_at' => now(),
+                        'created_by' => DB::raw('COALESCE(created_by, ' . auth()->id() . ')'),
                     ]);
                 
                 return response()->json([
@@ -54,11 +57,12 @@ class TanggalController extends Controller
                 ]);
             }
             
-            // Jika belum ada, tambah baru dengan status 'nonaktif'
+            // Jika belum ada, tambah baru dengan status 'nonaktif' dan created_by
             DB::table('tanggal_nonaktif')->insert([
                 'tanggal' => $request->tanggal,
                 'keterangan' => $request->keterangan,
                 'status' => 'nonaktif',
+                'created_by' => auth()->id(),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -134,6 +138,9 @@ class TanggalController extends Controller
             if ($request->has('keterangan')) {
                 $data['keterangan'] = $request->keterangan;
             }
+            
+            // 🔥 TAMBAHKAN: jika created_by null, isi dengan admin yang melakukan aksi
+            $data['created_by'] = DB::raw('COALESCE(created_by, ' . auth()->id() . ')');
             
             DB::table('tanggal_nonaktif')
                 ->where('id', $id)

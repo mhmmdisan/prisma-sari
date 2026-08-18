@@ -147,7 +147,7 @@
                                     <div class="col-md-4">
                                         <label class="form-label small fw-semibold">Nama Produk</label>
                                         <input type="text" name="detail_pesanan[0][nama_item]"
-                                            class="form-control rounded-3 nama-item" placeholder="Contoh: Nasi Kuning"
+                                            class="form-control rounded-3 nama-item" placeholder="Contoh: Hantaran Gemblong"
                                             required>
                                     </div>
                                     <div class="col-md-2">

@@ -124,13 +124,12 @@ Route::middleware(['auth', 'role:pelanggan'])->prefix('pelanggan')->name('pelang
     Route::get('/pesanan', [PelangganPesananController::class, 'index'])->name('pesanan.index');
     Route::get('/pesanan/{id}', [PelangganPesananController::class, 'show'])->name('pesanan.show');
     Route::post('/pesanan/checkout', [PelangganPesananController::class, 'checkout'])->name('pesanan.checkout');
-    Route::get('/pesanan/{id}/edit', [PelangganPesananController::class, 'edit'])->name('pesanan.edit');
     
-    Route::put('/pesanan/{id}', [PelangganPesananController::class, 'update'])->name('pesanan.update');
     Route::post('/pesanan/{id}/batalkan', [PelangganPesananController::class, 'batalkan'])->name('pesanan.batalkan');
 
-    // Pembayaran (upload bukti)
+    // Pembayaran (upload & edit bukti)
     Route::post('/pembayaran/{id}/upload', [PelangganMetodePembayaranController::class, 'upload'])->name('pembayaran.upload');
+    Route::put('/pembayaran/{id}/bukti', [PelangganMetodePembayaranController::class, 'updateBukti'])->name('pembayaran.update-bukti');
 });
 
 

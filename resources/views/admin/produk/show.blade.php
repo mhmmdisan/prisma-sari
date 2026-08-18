@@ -34,8 +34,10 @@
                 <div class="col-md-4 text-center">
                     <div class="product-image-container">
                         @if($produk->gambar)
-                        <img src="{{ $produk->gambar_url }}" class="product-detail-image"
-                            alt="{{ $produk->nama_produk }}">
+                        <div class="image-frame">
+                            <img src="{{ $produk->gambar_url }}" class="product-detail-image"
+                                alt="{{ $produk->nama_produk }}">
+                        </div>
                         @else
                         <div class="no-image-container">
                             <i class="bi bi-image"></i>
@@ -268,20 +270,50 @@
     color: #2e7d32;
 }
 
-/* Product Image */
+/* ================================================================
+   PERBAIKAN GAMBAR PRODUK - SAMA SEPERTI HALAMAN PELANGGAN
+   ================================================================ */
+
+/* --- GAMBAR UTAMA PRODUK --- */
 .product-image-container {
     background: linear-gradient(135deg, #f8f9fa, #e8f5e9);
     border-radius: 20px;
     padding: 20px;
     text-align: center;
+    width: 100%;
+}
+
+.image-frame {
+    overflow: hidden;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f8f9fa, #e8f5e9);
+    width: 100%;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .product-detail-image {
-    max-width: 100%;
-    max-height: 250px;
-    border-radius: 16px;
-    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Semua gambar SERAGAM - mengisi area dengan proporsi yang sama */
+    border-radius: 12px;
+    transition: transform 0.5s ease;
 }
+
+.product-detail-image:hover {
+    transform: scale(1.05);
+}
+
+/* Alternatif jika ingin gambar utuh tanpa dipotong */
+/* .product-detail-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 10px;
+} */
 
 .no-image-container {
     padding: 40px 20px;
@@ -293,6 +325,10 @@
     font-size: 4rem;
     color: #2e7d32;
 }
+
+/* ================================================================
+   AKHIR PERBAIKAN GAMBAR
+   ================================================================ */
 
 /* Info Grid */
 .info-grid {
@@ -398,6 +434,13 @@
     }
 }
 
+/* --- RESPONSIVE UNTUK GAMBAR --- */
+@media (max-width: 992px) {
+    .image-frame {
+        height: 240px;
+    }
+}
+
 @media (max-width: 768px) {
     .page-title {
         font-size: 1.3rem;
@@ -418,6 +461,22 @@
 
     .action-buttons .btn {
         width: 100%;
+    }
+
+    .image-frame {
+        height: 200px;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .image-frame {
+        height: 180px;
+        padding: 8px;
+    }
+
+    .product-image-container {
+        padding: 12px;
     }
 }
 </style>

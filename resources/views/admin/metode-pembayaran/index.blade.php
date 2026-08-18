@@ -32,13 +32,13 @@
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
-                            <th style="width: 5%">No</th>
-                            <th style="width: 10%">Logo</th>
-                            <th>Nama Bank</th>
-                            <th>No. Rekening</th>
-                            <th>Atas Nama</th>
-                            <th style="width: 10%">Status</th>
-                            <th style="width: 15%">Aksi</th>
+                            <th style="width: 5%" class="text-center">No</th>
+                            <th style="width: 10%" class="text-center">Logo</th>
+                            <th class="text-center">Nama Bank</th>
+                            <th class="text-center">No. Rekening</th>
+                            <th class="text-center">Atas Nama</th>
+                            <th style="width: 10%" class="text-center">Status</th>
+                            <th style="width: 15%" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>

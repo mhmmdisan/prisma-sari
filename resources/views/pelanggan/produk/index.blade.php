@@ -31,8 +31,8 @@
                                     <i class="bi bi-whatsapp text-white fs-3"></i>
                                 </div>
                                 <div>
-                                    <h5 class="text-white fw-bold mb-1">Butuh Pesanan Custom?</h5>
-                                    <p class="text-white-50 mb-0 small">Tidak menemukan produk yang dicari? Pesan
+                                    <h5 class="text-white fw-bold mb-1">Butuh Pesanan Hantaran?</h5>
+                                    <p class="text-white-50 mb-0 small">Kreasikan produk yang Anda cari
                                         melalui WhatsApp</p>
                                 </div>
                             </div>
@@ -169,35 +169,67 @@
                     </div>
                     <nav aria-label="Page navigation">
                         <ul class="pagination mb-0">
+                            {{-- Tombol Sebelumnya --}}
                             @if($produk->onFirstPage())
                             <li class="page-item disabled">
                                 <span class="page-link"><i class="bi bi-chevron-left"></i> Sebelumnya</span>
                             </li>
                             @else
                             <li class="page-item">
-                                <a class="page-link" href="{{ $produk->previousPageUrl() }}"><i
-                                        class="bi bi-chevron-left"></i> Sebelumnya</a>
+                                <a class="page-link" href="{{ $produk->appends(request()->query())->previousPageUrl() }}">
+                                    <i class="bi bi-chevron-left"></i> Sebelumnya
+                                </a>
                             </li>
                             @endif
 
-                            @foreach($produk->getUrlRange(1, $produk->lastPage()) as $page => $url)
-                            @if($page == $produk->currentPage())
-                            <li class="page-item active"><span class="page-link">{{ $page }}</span></li>
-                            @elseif($page >= $produk->currentPage() - 2 && $page <= $produk->currentPage() + 2)
-                                <li class="page-item"><a class="page-link" href="{{ $url }}">{{ $page }}</a></li>
-                                @endif
-                                @endforeach
+                            {{-- Link halaman angka --}}
+                            @php
+                                $currentPage = $produk->currentPage();
+                                $lastPage = $produk->lastPage();
+                                $start = max(1, $currentPage - 2);
+                                $end = min($lastPage, $currentPage + 2);
+                            @endphp
 
-                                @if($produk->hasMorePages())
+                            @if($start > 1)
                                 <li class="page-item">
-                                    <a class="page-link" href="{{ $produk->nextPageUrl() }}">Selanjutnya <i
-                                            class="bi bi-chevron-right"></i></a>
+                                    <a class="page-link" href="{{ $produk->appends(request()->query())->url(1) }}">1</a>
                                 </li>
-                                @else
-                                <li class="page-item disabled">
-                                    <span class="page-link">Selanjutnya <i class="bi bi-chevron-right"></i></span>
-                                </li>
+                                @if($start > 2)
+                                    <li class="page-item disabled"><span class="page-link">...</span></li>
                                 @endif
+                            @endif
+
+                            @for($page = $start; $page <= $end; $page++)
+                                @if($page == $currentPage)
+                                    <li class="page-item active"><span class="page-link">{{ $page }}</span></li>
+                                @else
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ $produk->appends(request()->query())->url($page) }}">{{ $page }}</a>
+                                    </li>
+                                @endif
+                            @endfor
+
+                            @if($end < $lastPage)
+                                @if($end < $lastPage - 1)
+                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                @endif
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ $produk->appends(request()->query())->url($lastPage) }}">{{ $lastPage }}</a>
+                                </li>
+                            @endif
+
+                            {{-- Tombol Selanjutnya --}}
+                            @if($produk->hasMorePages())
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $produk->appends(request()->query())->nextPageUrl() }}">
+                                    Selanjutnya <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                            @else
+                            <li class="page-item disabled">
+                                <span class="page-link">Selanjutnya <i class="bi bi-chevron-right"></i></span>
+                            </li>
+                            @endif
                         </ul>
                     </nav>
                 </div>

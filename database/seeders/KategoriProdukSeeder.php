@@ -12,6 +12,7 @@ class KategoriProdukSeeder extends Seeder
         $kategori = [
             ['nama_kategori' => 'Jajanan Basah'],
             ['nama_kategori' => 'Paketan'],
+            ['nama_kategori' => 'Hantaran'],
         ];
 
         DB::table('kategori_produk')->insert($kategori);

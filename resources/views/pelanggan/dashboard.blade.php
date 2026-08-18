@@ -13,9 +13,13 @@
                     <div class="corner-decoration2"></div>
                     <div class="card-body p-4 p-md-5 position-relative z-1">
                         <div class="row align-items-center">
-                            <div class="col-12">
+                            <!-- Logo Prisma Sari - diperbesar -->
+                            <div class="col-auto d-none d-sm-block">
+                                <img src="{{ asset('images/logowebsite.png') }}" alt="Prisma Sari Catering" style="height: 80px; width: auto; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));">
+                            </div>
+                            <div class="col-12 col-sm">
                                 <h2 class="text-white fw-bold mb-2" style="font-size: 1.5rem;">
-                                    Selamat Datang, {{ Auth::user()->name }}! 🎉
+                                    Selamat Datang, {{ Auth::user()->name }}
                                 </h2>
                                 <p class="text-white-50 mb-0 small">
                                     Pesan catering dan snackbox favorit Anda dengan mudah
@@ -81,7 +85,7 @@
             <div class="col-12">
                 <div class="section-header d-flex justify-content-between align-items-center mb-4">
                     <h3 class="section-title fw-bold mb-0">
-                        <i class="bi bi-star-fill me-2"></i> Produk Terbaru
+                        <i class="bi bi-star-fill me-2"></i> Produk Jajanan Basah
                     </h3>
                     <a href="{{ route('pelanggan.produk.index') }}" class="view-all-link">
                         Lihat Semua <i class="bi bi-arrow-right ms-1"></i>
@@ -102,7 +106,7 @@
                                     alt="{{ $produk->nama_produk }}" class="product-img">
                                 @else
                                 <div class="product-img-placeholder">
-                                    <i class="fas fa-utensils"></i>
+                                    <img src="{{ asset('images/logowebsite.png') }}" alt="Logo Prisma Sari" style="height: 60px; width: auto; opacity: 0.7;">
                                 </div>
                                 @endif
                                 <div class="product-badge">
@@ -159,7 +163,7 @@
                                     alt="{{ $produk->nama_produk }}" class="product-img">
                                 @else
                                 <div class="product-img-placeholder">
-                                    <i class="fas fa-cookie-bite"></i>
+                                    <img src="{{ asset('images/logowebsite.png') }}" alt="Logo Prisma Sari" style="height: 60px; width: auto; opacity: 0.7;">
                                 </div>
                                 @endif
                                 <div class="product-badge product-badge-gold">
@@ -474,9 +478,12 @@ function tambahKeKeranjang(produkId) {
     height: 100%;
 }
 
-.product-img-placeholder i {
-    font-size: 3rem;
-    color: #ffc107;
+.product-img-placeholder img {
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-img-placeholder img {
+    transform: scale(1.1);
 }
 
 .product-badge {

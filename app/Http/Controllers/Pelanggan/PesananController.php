@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Log;
 
 class PesananController extends Controller
 {
+    // 🔥 KONSTANTA MINIMAL HARI UNTUK PEMESANAN
+    const MIN_DAYS = 5; // Minimal H+5
+    
     // Riwayat pesanan
     public function index()
     {
@@ -39,138 +42,27 @@ class PesananController extends Controller
         return view('pelanggan.pesanan.show', compact('pesanan', 'metodePembayaran'));
     }
     
-    // Halaman edit pesanan
-    public function edit($id)
-    {
-        $pesanan = Pesanan::with(['detailPesanan.produk.kategori', 'detailPesanan.customSnackbox'])
-            ->where('user_id', Auth::id())
-            ->where('status', 'menunggu_pembayaran')
-            ->where('status_pembayaran', 'belum_bayar')
-            ->where('expired_at', '>', now())
-            ->findOrFail($id);
-        
-        $metodePembayaran = MetodePembayaran::where('status_aktif', true)->get();
-        
-        // Kirim data minimal order ke view
-        $minimalOrderData = [];
-        foreach ($pesanan->detailPesanan as $detail) {
-            if ($detail->custom_snackbox_id) {
-                $minimalOrderData[$detail->nama_item] = 35;
-            } elseif ($detail->produk && $detail->produk->kategori && $detail->produk->kategori->nama_kategori == 'Paketan') {
-                $minimalOrderData[$detail->nama_item] = $detail->produk->min_order ?? 1;
-            } else {
-                $minimalOrderData[$detail->nama_item] = 50; // Jajanan Basah
-            }
-        }
-        
-        return view('pelanggan.pesanan.edit', compact('pesanan', 'metodePembayaran', 'minimalOrderData'));
-    }
-    
-    // Proses update pesanan (termasuk update jumlah produk)
-    public function update(Request $request, $id)
-    {
-        $pesanan = Pesanan::where('user_id', Auth::id())
-            ->where('status', 'menunggu_pembayaran')
-            ->where('status_pembayaran', 'belum_bayar')
-            ->where('expired_at', '>', now())
-            ->findOrFail($id);
-        
-        $request->validate([
-            'tanggal_pengambilan' => 'required|date|after_or_equal:' . now()->addDays(2)->format('Y-m-d\TH:i'),
-            'alamat_pengiriman' => 'required|string',
-            'catatan_pesanan' => 'nullable|string',
-            'detail_pesanan' => 'required|array|min:1',
-            'detail_pesanan.*.nama_item' => 'required|string',
-            'detail_pesanan.*.jumlah' => 'required|integer|min:1',
-            'detail_pesanan.*.harga_satuan' => 'required|integer|min:0',
-        ]);
-        
-        DB::beginTransaction();
-        
-        try {
-            // Update data utama pesanan
-            $pesanan->update([
-                'tanggal_pengambilan' => $request->tanggal_pengambilan,
-                'alamat_pengiriman' => $request->alamat_pengiriman,
-                'catatan_pesanan' => $request->catatan_pesanan,
-            ]);
-            
-            // Ambil detail pesanan lama dengan relasi produk (untuk minimal order)
-            $detailLama = DetailPesanan::with('produk.kategori')
-                ->where('pesanan_id', $pesanan->id)
-                ->get()
-                ->keyBy('nama_item');
-            
-            $detailItems = $request->detail_pesanan;
-            $totalHarga = 0;
-            
-            foreach ($detailItems as $item) {
-                $namaItem = $item['nama_item'];
-                $detailLamaItem = $detailLama[$namaItem] ?? null;
-                
-                // 🔥 TOLAK ITEM BARU (tidak boleh menambah item)
-                if (!$detailLamaItem) {
-                    DB::rollBack();
-                    return back()->with('error', "Anda tidak diperbolehkan menambah item baru. Item '{$namaItem}' tidak dikenali.")
-                        ->withInput();
-                }
-                
-                // Tentukan minimal order berdasarkan jenis item
-                $minOrder = 50;
-                $satuan = 'pcs';
-                
-                if ($detailLamaItem->custom_snackbox_id) {
-                    $minOrder = 35;
-                    $satuan = 'box';
-                } elseif ($detailLamaItem->produk && $detailLamaItem->produk->kategori && $detailLamaItem->produk->kategori->nama_kategori == 'Paketan') {
-                    $minOrder = $detailLamaItem->produk->min_order ?? 1;
-                    $satuan = 'paket';
-                }
-                
-                // Validasi jumlah tidak boleh kurang dari minimal order
-                if ($item['jumlah'] < $minOrder) {
-                    DB::rollBack();
-                    return back()->with('error', "Item \"{$namaItem}\" minimal pesanan {$minOrder} {$satuan}!")
-                        ->withInput();
-                }
-                
-                // Update jumlah dan subtotal (harga satuan tetap pakai yang lama)
-                $subtotal = (int) $item['jumlah'] * (int) $detailLamaItem->harga_satuan;
-                $detailLamaItem->update([
-                    'jumlah' => $item['jumlah'],
-                    'subtotal' => $subtotal,
-                ]);
-                $totalHarga += $subtotal;
-            }
-            
-            // Update total harga pesanan
-            $pesanan->total_harga = $totalHarga;
-            $pesanan->save();
-            
-            DB::commit();
-            
-            return redirect()->route('pelanggan.pesanan.show', $pesanan->id)
-                ->with('success', 'Pesanan berhasil diperbarui!');
-                
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Update pesanan error: ' . $e->getMessage());
-            return back()->with('error', 'Gagal memperbarui pesanan: ' . $e->getMessage());
-        }
-    }
-    
     // Checkout
     public function checkout(Request $request)
     {
-        \Log::info('Checkout request:', $request->all());
+        // 🔥 VALIDASI TANGGAL (H+5) - MENGGUNAKAN CARBON
+        $minDate = now()->addDays(self::MIN_DAYS)->startOfDay();
         
-        $request->validate([
-            'tanggal_pengambilan' => 'required|date|after_or_equal:' . now()->addDays(2)->format('Y-m-d\TH:i'),
-            'alamat_pengiriman' => 'required|string',
-            'catatan_pesanan' => 'nullable|string'
-        ]);
+        // Validasi format tanggal
+        try {
+            $tanggalInput = \Carbon\Carbon::parse($request->tanggal_pengambilan);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Format tanggal tidak valid!')
+                ->withInput();
+        }
+        
+        // Cek apakah tanggal >= H+5
+        if ($tanggalInput->lt($minDate)) {
+            return back()->with('error', 'Tanggal pengambilan minimal H+5 dari sekarang!')
+                ->withInput();
+        }
 
-        // VALIDASI CEK TANGGAL NONAKTIF
+        // 🔥 VALIDASI CEK TANGGAL NONAKTIF
         $tanggal = date('Y-m-d', strtotime($request->tanggal_pengambilan));
         
         $tanggalNonaktif = DB::table('tanggal_nonaktif')
@@ -193,10 +85,11 @@ class PesananController extends Controller
                 ->get();
             
             if ($keranjang->isEmpty()) {
+                DB::rollBack();
                 return back()->with('error', 'Keranjang belanja kosong!');
             }
             
-            // VALIDASI MINIMAL ORDER
+            // 🔥 VALIDASI MINIMAL ORDER
             foreach ($keranjang as $item) {
                 $minOrder = 50;
                 $satuan = 'pcs';
@@ -259,12 +152,14 @@ class PesananController extends Controller
                 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Checkout error: ' . $e->getMessage());
             return back()->with('error', 'Gagal checkout: ' . $e->getMessage());
         }
     }
     
     /**
      * BATALKAN PESANAN - DENGAN PENGEMBALIAN PRODUK KE KERANJANG
+     * Hanya bisa dibatalkan jika status_pembayaran = 'belum_bayar'
      */
     public function batalkan($id)
     {
@@ -278,8 +173,7 @@ class PesananController extends Controller
                 ], 404);
             }
             
-            Log::info('Batalkan pesanan - ID: ' . $id . ', Status: ' . $pesanan->status . ', Payment: ' . $pesanan->status_pembayaran);
-            
+            // 🔥 CEK STATUS PESANAN
             if ($pesanan->status != 'menunggu_pembayaran') {
                 return response()->json([
                     'success' => false, 
@@ -287,10 +181,19 @@ class PesananController extends Controller
                 ], 400);
             }
             
+            // 🔥 CEK STATUS PEMBAYARAN - HANYA BISA BATALKAN JIKA BELUM BAYAR
             if ($pesanan->status_pembayaran != 'belum_bayar') {
                 return response()->json([
                     'success' => false, 
-                    'message' => 'Pesanan tidak dapat dibatalkan karena status pembayaran: ' . $pesanan->status_pembayaran
+                    'message' => 'Pesanan tidak dapat dibatalkan karena sudah upload bukti pembayaran. Silakan hubungi admin.'
+                ], 400);
+            }
+            
+            // 🔥 CEK APAKAH PESANAN SUDAH EXPIRED
+            if ($pesanan->expired_at && $pesanan->expired_at < now()) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Pesanan sudah melewati batas waktu pembayaran. Silakan buat pesanan baru.'
                 ], 400);
             }
             
@@ -326,8 +229,6 @@ class PesananController extends Controller
             // Update status pesanan
             $pesanan->status = 'dibatalkan';
             $pesanan->save();
-            
-            Log::info('Pesanan berhasil dibatalkan - ID: ' . $id . ' - Produk dikembalikan ke keranjang');
             
             return response()->json([
                 'success' => true, 

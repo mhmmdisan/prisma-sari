@@ -27,6 +27,8 @@ return new class extends Migration
                   ->default('belum_bayar');
             $table->text('catatan_pesanan')->nullable();
             
+             $table->boolean('is_whatsapp_order')->default(false);
+             
             $table->enum('status', [
                 'menunggu_pembayaran',
                 'diproses',

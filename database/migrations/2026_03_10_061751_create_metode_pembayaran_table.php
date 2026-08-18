@@ -1,5 +1,4 @@
 <?php
-// database/migrations/2026_03_11_000004_create_metode_pembayaran_table.php
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

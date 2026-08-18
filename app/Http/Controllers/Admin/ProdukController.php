@@ -8,6 +8,7 @@ use App\Models\KategoriProduk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ProdukController extends Controller
 {
@@ -56,11 +57,10 @@ class ProdukController extends Controller
                 'deskripsi' => 'nullable|string',
                 'min_order' => 'required|integer|min:1',
                 'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'is_snackbox_only' => 'nullable|boolean', // 🔥 TAMBAHKAN
+                'is_snackbox_only' => 'nullable|boolean',
             ]);
             
             $data = $request->except('gambar');
-            // 🔥 Set nilai is_snackbox_only (checkbox: 1 jika dicentang, 0 jika tidak)
             $data['is_snackbox_only'] = $request->has('is_snackbox_only') ? 1 : 0;
             
             // Handle image upload
@@ -79,6 +79,13 @@ class ProdukController extends Controller
                 'redirect' => route('admin.produk.index')
             ]);
             
+        } catch (ValidationException $e) {
+            // Kirim error validasi ke frontend dengan status 422
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -121,16 +128,14 @@ class ProdukController extends Controller
                 'deskripsi' => 'nullable|string',
                 'min_order' => 'required|integer|min:1',
                 'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'is_snackbox_only' => 'nullable|boolean', // 🔥 TAMBAHKAN
+                'is_snackbox_only' => 'nullable|boolean',
             ]);
             
             $data = $request->except('gambar');
-            // 🔥 Set nilai is_snackbox_only (checkbox: 1 jika dicentang, 0 jika tidak)
             $data['is_snackbox_only'] = $request->has('is_snackbox_only') ? 1 : 0;
             
-            // Handle image upload
+            // Handle image upload (hapus gambar lama jika ada)
             if ($request->hasFile('gambar')) {
-        
                 if ($produk->gambar && file_exists(public_path('storage/produk/' . $produk->gambar))) {
                     @unlink(public_path('storage/produk/' . $produk->gambar));
                 }
@@ -149,6 +154,13 @@ class ProdukController extends Controller
                 'redirect' => route('admin.produk.index')
             ]);
             
+        } catch (ValidationException $e) {
+            // Kirim error validasi ke frontend dengan status 422
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

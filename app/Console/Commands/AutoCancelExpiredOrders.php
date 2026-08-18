@@ -13,8 +13,8 @@ class AutoCancelExpiredOrders extends Command
 
     public function handle()
     {
-        // Cari pesanan yang sudah expired
-        $expiredOrders = Pesanan::where('status', 'menunggu_pembayaran')
+        // Pesanan dengan status 'menunggu_verifikasi' (sudah upload bukti) TIDAK dibatalkan
+        $expiredOrders = Pesanan::where('status', Pesanan::STATUS_MENUNGGU_PEMBAYARAN)
             ->where('status_pembayaran', 'belum_bayar')
             ->where('expired_at', '<', now())
             ->get();
@@ -24,7 +24,7 @@ class AutoCancelExpiredOrders extends Command
         foreach ($expiredOrders as $pesanan) {
             try {
                 // Ubah status menjadi dibatalkan
-                $pesanan->status = 'dibatalkan';
+                $pesanan->status = Pesanan::STATUS_DIBATALKAN;
                 $pesanan->save();
 
                 $count++;

@@ -182,6 +182,14 @@
                                         <i class="bi bi-trash"></i> Hapus
                                     </button>
                                 </div>
+
+                                {{-- 🔥 TAMBAHKAN INI: hidden input untuk menyimpan ID custom snackbox --}}
+                                @if($item->customSnackbox)
+                                    <input type="hidden"
+                                           name="detail_pesanan[{{ $index }}][custom_snackbox_id]"
+                                           value="{{ $item->customSnackbox->id }}">
+                                @endif
+
                                 <div class="row g-3">
                                     <div class="col-md-5">
                                         <label class="form-label small fw-semibold">Nama Produk</label>

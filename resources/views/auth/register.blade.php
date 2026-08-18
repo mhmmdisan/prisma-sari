@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
     * {
@@ -43,21 +45,46 @@
         padding: 40px 32px;
     }
 
-    .logo-wrapper {
-        width: 70px;
-        height: 70px;
-        background: linear-gradient(135deg, #0d4715, #2e7d32);
-        border-radius: 20px;
+    /* ===== LOGO DENGAN GAMBAR ===== */
+    .logo-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .logo-container img {
+        max-width: 200px;
+        width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+        transition: transform 0.3s ease;
+    }
+
+    .logo-container img:hover {
+        transform: scale(1.05);
+    }
+
+    /* Alternatif jika logo dalam kotak dengan background */
+    .logo-box-wrapper {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 12px;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(46, 125, 50, 0.2);
+        background: linear-gradient(135deg, #1b5e20, #2e7d32);
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 20px;
+        padding: 10px;
     }
 
-    .logo-wrapper i {
-        font-size: 32px;
-        color: #ffc107;
+    .logo-box-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
     }
+    /* ===== AKHIR LOGO ===== */
 
     h2 {
         font-size: 28px;
@@ -215,13 +242,13 @@
             font-size: 24px;
         }
 
-        .logo-wrapper {
-            width: 60px;
-            height: 60px;
+        .logo-container img {
+            max-width: 150px;
         }
 
-        .logo-wrapper i {
-            font-size: 28px;
+        .logo-box-wrapper {
+            width: 80px;
+            height: 80px;
         }
     }
     </style>
@@ -230,9 +257,10 @@
 <body>
     <div class="register-container">
         <div class="register-card">
-            <div class="logo-wrapper">
-                <i class="fas fa-user-plus"></i>
+            <div class="logo-container">
+                <img src="{{ asset('images/logo-prisma-sari.png') }}" alt="Prisma Sari Catering">
             </div>
+
             <h2>Daftar Akun</h2>
             <p class="subtitle">Bergabunglah dengan Prisma Sari Catering</p>
 
@@ -306,7 +334,7 @@
                 <div class="form-group">
                     <label><i class="fas fa-user"></i> Full Name</label>
                     <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror"
-                        placeholder="Your full name" value="{{ old('name') }}" autofocus>
+                        placeholder="Masukkan nama lengkap" value="{{ old('name') }}" autofocus>
                     @error('name')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -315,7 +343,7 @@
                 <div class="form-group">
                     <label><i class="fas fa-envelope"></i> Email Address</label>
                     <input type="email" name="email" id="email"
-                        class="form-control @error('email') is-invalid @enderror" placeholder="your@email.com"
+                        class="form-control @error('email') is-invalid @enderror" placeholder="Masukkan email"
                         value="{{ old('email') }}">
                     @error('email')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -335,7 +363,7 @@
                     <label><i class="fas fa-check-circle"></i> Confirm Password</label>
                     <input type="password" name="password_confirmation" id="password_confirmation"
                         class="form-control @error('password_confirmation') is-invalid @enderror"
-                        placeholder="Confirm your password">
+                        placeholder="Konfirmasi password">
                 </div>
 
                 <button type="submit" class="btn-register" id="submitBtn">

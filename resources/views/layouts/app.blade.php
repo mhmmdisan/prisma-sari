@@ -41,9 +41,13 @@
     }
 
     .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
         font-weight: 800;
         font-size: 1.4rem;
         color: white !important;
+        text-decoration: none;
         transition: transform 0.3s ease;
     }
 
@@ -53,9 +57,29 @@
         }
     }
 
-    .navbar-brand i {
-        color: #ffc107;
-        margin-right: 8px;
+    /* Logo gambar diperbesar */
+    .navbar-brand img {
+        height: 50px;
+        width: auto;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        transition: transform 0.2s ease;
+    }
+
+    @media (max-width: 767px) {
+        .navbar-brand img {
+            height: 40px;
+        }
+    }
+
+    .navbar-brand:hover img {
+        transform: scale(1.05);
+    }
+
+    .navbar-brand .brand-text {
+        color: white;
+    }
+    .navbar-brand .brand-text span {
+        color: #ffc107; /* emas */
     }
 
     .navbar-brand:hover {
@@ -386,7 +410,9 @@
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
             <a class="navbar-brand" href="{{ route('pelanggan.dashboard') }}">
-                <i class="fas fa-utensils"></i> Prisma <span style="color: #ffc107;">Sari</span>
+                <!-- Logo gambar -->
+                <img src="{{ asset('images/logowebsite.png') }}" alt="Prisma Sari Catering">
+                <span class="brand-text">Prisma <span>Sari</span> Catering</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -506,23 +532,19 @@
             <div class="row">
                 <div class="col-md-4 mb-4">
                     <h5>Prisma Sari Catering</h5>
-                    <p>Solusi catering terbaik untuk acara Anda dengan cita rasa rumah yang autentik.</p>
+                    <p>Solusi catering terbaik untuk acara Anda dengan cita rasa rumahan yang autentik.</p>
                     <div class="mt-3 d-flex gap-3">
-                        <a href="#" class="text-white"><i class="fab fa-instagram fs-5"></i></a>
-                        <a href="#" class="text-white"><i class="fab fa-facebook fs-5"></i></a>
+                        <a href="https://www.instagram.com/prismasari_snack?igsh=ZWtkNDQ2aGpla3Q3&igsi=ZWtkNDQ2aGpla3Q3" class="text-white"><i class="fab fa-instagram fs-5"></i></a>
                         <a href="#" class="text-white"><i class="fab fa-whatsapp fs-5"></i></a>
                     </div>
                 </div>
                 <div class="col-md-4 mb-4">
                     <h5>Kontak Kami</h5>
                     <p class="mb-2">
-                        <i class="fas fa-phone me-2"></i> 0813-2609-2609
+                        <i class="fab fa-whatsapp me-2"></i> 0813-2609-2609
                     </p>
                     <p class="mb-2">
-                        <i class="fab fa-whatsapp me-2"></i> 0813-2587-2610
-                    </p>
-                    <p class="mb-2">
-                        <i class="fas fa-envelope me-2"></i> prismasari@catering.com
+                        <i class="fas fa-envelope me-2"></i> Prismasari.snack@gmail.com
                     </p>
                     <p>
                         <i class="fas fa-map-marker-alt me-2"></i> Ngembalrejo - Bae - Kudus
@@ -531,14 +553,11 @@
                 <div class="col-md-4 mb-4">
                     <h5>Jam Operasional</h5>
                     <p class="mb-2">
-                        <i class="fas fa-clock me-2"></i> Senin - Sabtu: 08.00 - 17.00
-                    </p>
-                    <p>
-                        <i class="fas fa-clock me-2"></i> Minggu: Libur
+                        <i class="fas fa-clock me-2"></i> Buka setiap hari mulai dari jam 08.00 - 17.00 WIB
                     </p>
                     <hr style="background-color: rgba(255,255,255,0.2);">
                     <p class="mb-0 small">
-                        <i class="fas fa-check-circle text-warning me-1"></i> Pesan H-2 untuk ketersediaan
+                        <i class="fas fa-check-circle text-warning me-1"></i> Pesan 5 hari dari sekarang untuk ketersediaan 
                     </p>
                 </div>
             </div>

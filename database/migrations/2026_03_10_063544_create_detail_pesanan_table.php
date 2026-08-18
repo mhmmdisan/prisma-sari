@@ -14,9 +14,10 @@ return new class extends Migration
             
             // Hanya salah satu yang terisi
             $table->foreignId('produk_id')->nullable()->constrained('produk')->onDelete('set null');
-            $table->foreignId('custom_snackbox_id')->nullable()->constrained('custom_snackbox')->onDelete('set null');  // 🔥 TAMBAHKAN
+            $table->foreignId('custom_snackbox_id')->nullable()->constrained('custom_snackbox')->onDelete('set null');
             
-            $table->string('nama_item', 200);                    
+            $table->string('nama_item', 200);    
+            $table->foreignId('kategori_id')->nullable()->constrained('kategori_produk')->onDelete('set null');                
             $table->integer('jumlah');                            
             $table->integer('harga_satuan');                      
             $table->integer('subtotal');                          

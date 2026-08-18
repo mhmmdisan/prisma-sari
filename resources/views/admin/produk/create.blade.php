@@ -45,7 +45,7 @@
                             value="{{ old('nama_produk') }}" placeholder="Masukkan nama produk">
                         <div class="invalid-feedback-custom" id="error_nama_produk"
                             style="display: none; color: #dc3545; font-size: 0.8rem; margin-top: 5px;">
-                            <i class="bi bi-exclamation-circle me-1"></i> Nama produk tidak boleh kosong!
+                            <i class="bi bi-exclamation-circle me-1"></i> <span id="error_nama_produk_text">Nama produk tidak boleh kosong!</span>
                         </div>
                         @error('nama_produk')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -68,7 +68,7 @@
                         </select>
                         <div class="invalid-feedback-custom" id="error_kategori_id"
                             style="display: none; color: #dc3545; font-size: 0.8rem; margin-top: 5px;">
-                            <i class="bi bi-exclamation-circle me-1"></i> Kategori tidak boleh kosong!
+                            <i class="bi bi-exclamation-circle me-1"></i> <span id="error_kategori_id_text">Kategori tidak boleh kosong!</span>
                         </div>
                         @error('kategori_id')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -85,7 +85,7 @@
                             value="{{ old('harga') }}" placeholder="Masukkan harga produk">
                         <div class="invalid-feedback-custom" id="error_harga"
                             style="display: none; color: #dc3545; font-size: 0.8rem; margin-top: 5px;">
-                            <i class="bi bi-exclamation-circle me-1"></i> Harga tidak boleh kosong!
+                            <i class="bi bi-exclamation-circle me-1"></i> <span id="error_harga_text">Harga tidak boleh kosong!</span>
                         </div>
                         @error('harga')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -105,14 +105,14 @@
                         </small>
                         <div class="invalid-feedback-custom" id="error_min_order"
                             style="display: none; color: #dc3545; font-size: 0.8rem; margin-top: 5px;">
-                            <i class="bi bi-exclamation-circle me-1"></i> Minimal order tidak boleh kosong!
+                            <i class="bi bi-exclamation-circle me-1"></i> <span id="error_min_order_text">Minimal order tidak boleh kosong!</span>
                         </div>
                         @error('min_order')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <!-- Khusus Snackbox (Checkbox) -->
+                    <!-- Khusus Snackbox -->
                     <div class="col-md-6">
                         <label class="form-label fw-semibold mb-2" for="is_snackbox_only">
                             <i class="bi bi-box-seam text-purple me-1"></i> Khusus Snackbox
@@ -146,17 +146,18 @@
                     <!-- Gambar Produk -->
                     <div class="col-12">
                         <label class="form-label fw-semibold mb-2">
-                            <i class="bi bi-image me-1"></i> Gambar Produk
+                            <i class="bi bi-image me-1"></i> Gambar Produk <span class="text-danger">*</span>
                         </label>
                         <div class="upload-area">
-                            <div class="upload-box" id="uploadBox"
-                                onclick="document.getElementById('gambarInput').click()">
+                            <div class="upload-box" id="uploadBox">
                                 <i class="bi bi-cloud-upload upload-icon"></i>
                                 <p class="upload-text">Klik untuk upload gambar</p>
                                 <small class="upload-hint">Format: JPG, PNG. Maks: 2MB</small>
                             </div>
+                            <!-- INI INPUT FILE - TANPA INLINE ONCHANGE -->
                             <input type="file" name="gambar" id="gambarInput"
-                                class="form-control rounded-3 @error('gambar') is-invalid @enderror" accept="image/*"
+                                class="form-control rounded-3 @error('gambar') is-invalid @enderror"
+                                accept="image/jpeg,image/png,image/jpg"
                                 style="display: none;">
                             <div id="imagePreview" class="mt-3" style="display: none;">
                                 <div class="preview-container">
@@ -166,10 +167,15 @@
                                     </button>
                                 </div>
                             </div>
+                            <!-- Error gambar -->
+                            <div class="invalid-feedback-custom" id="error_gambar"
+                                style="display: none; color: #dc3545; font-size: 0.8rem; margin-top: 5px;">
+                                <i class="bi bi-exclamation-circle me-1"></i> <span id="error_gambar_text"></span>
+                            </div>
+                            @error('gambar')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
                         </div>
-                        @error('gambar')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
                     </div>
                 </div>
 
@@ -187,7 +193,7 @@
     </div>
 </div>
 
-<!-- CSS Custom untuk Styling -->
+<!-- CSS Custom (sama seperti sebelumnya) -->
 <style>
 /* Style untuk input error */
 .form-control.error,
@@ -236,6 +242,11 @@
     background: linear-gradient(135deg, #ffecb3, #ffe082);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+}
+
+.upload-box.error {
+    border-color: #dc3545 !important;
+    background-color: #fff5f5 !important;
 }
 
 .upload-icon {
@@ -293,7 +304,7 @@
     background: #c82333;
 }
 
-/* Custom Toast - Perbaikan warna sukses menjadi hijau */
+/* Custom Toast */
 .custom-toast {
     position: fixed;
     top: 20px;
@@ -318,13 +329,11 @@
     transform: translateX(0);
 }
 
-/* Toast error (merah) */
 .custom-toast.toast-error {
     border-left-color: #dc3545;
     background: linear-gradient(135deg, #ffffff, #fef2f2);
 }
 
-/* Toast success (hijau) */
 .custom-toast.toast-success {
     border-left-color: #28a745;
     background: linear-gradient(135deg, #ffffff, #e8f5e9);
@@ -491,96 +500,164 @@
 
 @push('scripts')
 <script>
-// Preview gambar
-let selectedFile = null;
+// ========================================================
+// DEBUG: TAMPILKAN PESAN DI KONSOL
+// ========================================================
+console.log('Script create.blade.php dimuat!');
 
-document.getElementById('gambarInput')?.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        selectedFile = file;
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const preview = document.getElementById('previewImg');
-            const container = document.getElementById('imagePreview');
-            preview.src = event.target.result;
-            container.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
+// ========================================================
+// 1. PREVIEW GAMBAR
+// ========================================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM siap!');
+
+    var gambarInput = document.getElementById('gambarInput');
+    var uploadBox = document.getElementById('uploadBox');
+    var previewImg = document.getElementById('previewImg');
+    var imagePreview = document.getElementById('imagePreview');
+
+    if (!gambarInput) {
+        console.error('Elemen #gambarInput tidak ditemukan!');
+        return;
     }
+
+    // Event change pada input file
+    gambarInput.addEventListener('change', function(e) {
+        console.log('Event change terjadi!');
+        var file = this.files[0];
+        if (file) {
+            console.log('File dipilih:', file.name, file.size, file.type);
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                previewImg.src = event.target.result;
+                imagePreview.style.display = 'block';
+                // Hapus error
+                gambarInput.classList.remove('error');
+                document.getElementById('error_gambar').style.display = 'none';
+                uploadBox.classList.remove('error');
+                console.log('Preview ditampilkan!');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            console.log('Tidak ada file dipilih (dibatalkan)');
+            removeImage();
+        }
+    });
+
+    // Klik pada upload box memicu input file
+    if (uploadBox) {
+        uploadBox.addEventListener('click', function() {
+            console.log('Upload box diklik, membuka dialog file');
+            gambarInput.click();
+        });
+    }
+
+    // Fungsi global removeImage
+    window.removeImage = function() {
+        console.log('removeImage dipanggil');
+        gambarInput.value = '';
+        imagePreview.style.display = 'none';
+        document.getElementById('error_gambar').style.display = 'none';
+        uploadBox.classList.remove('error');
+    };
 });
 
-function removeImage() {
-    document.getElementById('gambarInput').value = '';
-    document.getElementById('imagePreview').style.display = 'none';
-    selectedFile = null;
-}
-
-// Click upload box
-document.getElementById('uploadBox')?.addEventListener('click', function() {
-    document.getElementById('gambarInput').click();
-});
-
-// ============================================================
-// VALIDASI & SUBMIT FORM AJAX
-// ============================================================
+// ========================================================
+// 2. SUBMIT FORM (AJAX)
+// ========================================================
 document.getElementById('formTambahProduk')?.addEventListener('submit', function(e) {
     e.preventDefault();
+    console.log('Form disubmit');
 
+    // Ambil elemen
     var namaProduk = document.getElementById('nama_produk');
     var kategoriId = document.getElementById('kategori_id');
     var harga = document.getElementById('harga');
     var minOrder = document.getElementById('min_order');
+    var gambarInput = document.getElementById('gambarInput');
 
     var errorNama = document.getElementById('error_nama_produk');
     var errorKategori = document.getElementById('error_kategori_id');
     var errorHarga = document.getElementById('error_harga');
     var errorMinOrder = document.getElementById('error_min_order');
+    var errorGambar = document.getElementById('error_gambar');
 
     var isValid = true;
     var errorMessages = [];
 
-    // Reset error styling
-    [namaProduk, kategoriId, harga, minOrder].forEach(el => el?.classList.remove('error'));
-    [errorNama, errorKategori, errorHarga, errorMinOrder].forEach(el => {
+    // Reset semua error
+    [namaProduk, kategoriId, harga, minOrder, gambarInput].forEach(el => el?.classList.remove('error'));
+    [errorNama, errorKategori, errorHarga, errorMinOrder, errorGambar].forEach(el => {
         if (el) el.style.display = 'none';
     });
+    document.getElementById('uploadBox')?.classList.remove('error');
 
-    // Validasi
+    // Validasi client-side
     if (!namaProduk.value.trim()) {
         namaProduk.classList.add('error');
-        if (errorNama) errorNama.style.display = 'block';
+        document.getElementById('error_nama_produk_text').textContent = 'Nama produk tidak boleh kosong!';
+        errorNama.style.display = 'block';
         errorMessages.push('Nama produk tidak boleh kosong');
         isValid = false;
     }
 
     if (!kategoriId.value) {
         kategoriId.classList.add('error');
-        if (errorKategori) errorKategori.style.display = 'block';
+        document.getElementById('error_kategori_id_text').textContent = 'Kategori tidak boleh kosong!';
+        errorKategori.style.display = 'block';
         errorMessages.push('Kategori tidak boleh kosong');
         isValid = false;
     }
 
     if (!harga.value || parseFloat(harga.value) <= 0) {
         harga.classList.add('error');
-        if (errorHarga) errorHarga.style.display = 'block';
+        document.getElementById('error_harga_text').textContent = 'Harga tidak boleh kosong!';
+        errorHarga.style.display = 'block';
         errorMessages.push('Harga tidak boleh kosong');
         isValid = false;
     }
 
     if (!minOrder.value || parseInt(minOrder.value) <= 0) {
         minOrder.classList.add('error');
-        if (errorMinOrder) errorMinOrder.style.display = 'block';
+        document.getElementById('error_min_order_text').textContent = 'Minimal order tidak boleh kosong!';
+        errorMinOrder.style.display = 'block';
         errorMessages.push('Minimal order tidak boleh kosong');
         isValid = false;
     }
 
+    // Validasi gambar (wajib)
+    var file = gambarInput.files[0];
+    if (!file) {
+        gambarInput.classList.add('error');
+        document.getElementById('error_gambar_text').textContent = 'Silakan pilih gambar produk';
+        errorGambar.style.display = 'block';
+        document.getElementById('uploadBox')?.classList.add('error');
+        errorMessages.push('Gambar produk wajib dipilih');
+        isValid = false;
+    } else {
+        var validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (!validTypes.includes(file.type)) {
+            gambarInput.classList.add('error');
+            document.getElementById('error_gambar_text').textContent = 'Format gambar harus JPG atau PNG';
+            errorGambar.style.display = 'block';
+            document.getElementById('uploadBox')?.classList.add('error');
+            errorMessages.push('Format gambar tidak didukung');
+            isValid = false;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            gambarInput.classList.add('error');
+            document.getElementById('error_gambar_text').textContent = 'Ukuran gambar maksimal 2MB';
+            errorGambar.style.display = 'block';
+            document.getElementById('uploadBox')?.classList.add('error');
+            errorMessages.push('Ukuran gambar terlalu besar');
+            isValid = false;
+        }
+    }
+
     if (!isValid) {
         showCustomToast('error', 'Validasi Gagal', errorMessages.join(', '));
-        var firstError = document.querySelector('.form-control.error, .form-select.error');
-        if (firstError) firstError.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-        });
+        var firstError = document.querySelector('.form-control.error, .form-select.error, .upload-box.error');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
 
@@ -599,7 +676,17 @@ document.getElementById('formTambahProduk')?.addEventListener('submit', function
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 422) {
+                    return response.json().then(errData => {
+                        throw { status: 422, errors: errData.errors };
+                    });
+                }
+                throw new Error('Server error');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 showCustomToast('success', 'Berhasil!', data.message);
@@ -613,31 +700,62 @@ document.getElementById('formTambahProduk')?.addEventListener('submit', function
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            showCustomToast('error', 'Kesalahan Server', 'Terjadi kesalahan pada server');
+            if (error.status === 422) {
+                document.querySelectorAll('.form-control, .form-select').forEach(el => el.classList.remove(
+                'error'));
+                document.querySelectorAll('.invalid-feedback-custom').forEach(el => el.style.display = 'none');
+                document.getElementById('uploadBox')?.classList.remove('error');
+
+                let errorMessages = [];
+                for (let field in error.errors) {
+                    let msg = error.errors[field][0];
+                    errorMessages.push(msg);
+                    let el = document.getElementById(field);
+                    if (el) {
+                        el.classList.add('error');
+                        let errorEl = document.getElementById(`error_${field}`);
+                        if (errorEl) {
+                            let span = errorEl.querySelector('span');
+                            if (span) span.textContent = msg;
+                            errorEl.style.display = 'block';
+                        }
+                        if (field === 'gambar') {
+                            document.getElementById('uploadBox')?.classList.add('error');
+                        }
+                    }
+                }
+                showCustomToast('error', 'Validasi Gagal', errorMessages.join(', '));
+            } else {
+                console.error('Error:', error);
+                showCustomToast('error', 'Kesalahan Server', 'Terjadi kesalahan pada server');
+            }
             btnSubmit.innerHTML = originalText;
             btnSubmit.disabled = false;
         });
 });
 
-// Hilangkan error styling saat user mulai mengetik
+// ========================================================
+// 3. RESET ERROR SAAT USER MENGISI
+// ========================================================
 ['nama_produk', 'kategori_id', 'harga', 'min_order'].forEach(id => {
     const el = document.getElementById(id);
-    const errorId = `error_${id}`;
-    el?.addEventListener('input', function() {
-        this.classList.remove('error');
-        const errorEl = document.getElementById(errorId);
-        if (errorEl) errorEl.style.display = 'none';
-    });
-    el?.addEventListener('change', function() {
-        this.classList.remove('error');
-        const errorEl = document.getElementById(errorId);
-        if (errorEl) errorEl.style.display = 'none';
-    });
+    if (el) {
+        el.addEventListener('input', function() {
+            this.classList.remove('error');
+            const errorEl = document.getElementById(`error_${id}`);
+            if (errorEl) errorEl.style.display = 'none';
+        });
+        el.addEventListener('change', function() {
+            this.classList.remove('error');
+            const errorEl = document.getElementById(`error_${id}`);
+            if (errorEl) errorEl.style.display = 'none';
+        });
+    }
 });
 
-// ============================================================
-// CUSTOM TOAST NOTIFICATION (DENGAN WARNA HIJAU UNTUK SUKSES)
+// ========================================================
+// 4. CUSTOM TOAST
+// ========================================================
 function showCustomToast(type, title, message) {
     var existingToasts = document.querySelectorAll('.custom-toast');
     existingToasts.forEach(toast => toast.remove());

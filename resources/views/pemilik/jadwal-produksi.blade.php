@@ -213,7 +213,7 @@
     width: 320px !important;
 }
 
-/* Pastikan seluruh bagian dalam kalender menggunakan background krem */
+/* bagian dalam kalender background krem */
 .flatpickr-calendar .flatpickr-innerContainer,
 .flatpickr-calendar .flatpickr-rContainer,
 .flatpickr-calendar .flatpickr-days,
@@ -221,7 +221,7 @@
     background: transparent !important;
 }
 
-/* Header kalender (bulan dan tahun) - HIJAU GRADIEN */
+/* Header kalender (bulan dan tahun) */
 .flatpickr-month {
     background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%) !important;
     margin: 0 !important;

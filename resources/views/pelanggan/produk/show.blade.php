@@ -278,6 +278,111 @@
     -webkit-appearance: none;
     margin: 0;
 }
+
+/* ================================================================
+   PERBAIKAN GAMBAR PRODUK - SEMUA GAMBAR MENJADI SERAGAM
+   ================================================================ */
+
+/* --- GAMBAR UTAMA PRODUK --- */
+.image-frame {
+    overflow: hidden;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--gray-bg), var(--green-soft));
+    padding: 20px;
+    width: 100%;
+    height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Semua gambar utama SERAGAM - mengisi area dengan proporsi yang sama */
+    transition: transform 0.5s ease;
+    border-radius: 12px;
+}
+
+/* Alternatif jika ingin gambar utuh tanpa dipotong */
+/* .product-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 10px;
+} */
+
+.product-main-img:hover {
+    transform: scale(1.05);
+}
+
+/* --- GAMBAR PRODUK TERKAIT / REKOMENDASI --- */
+.related-card-img {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 12px;
+    background: linear-gradient(135deg, var(--green-soft), #c8e6c9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.related-card:hover .related-card-img {
+    transform: scale(1.08);
+}
+
+.related-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Semua gambar rekomendasi SERAGAM */
+    border-radius: 50%;
+}
+
+.related-card-img i {
+    font-size: 2rem;
+    color: var(--green-primary);
+}
+
+/* --- RESPONSIVE UNTUK GAMBAR --- */
+@media (max-width: 992px) {
+    .image-frame {
+        height: 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    .image-frame {
+        height: 250px;
+        padding: 15px;
+    }
+    
+    .related-card-img {
+        width: 65px;
+        height: 65px;
+    }
+}
+
+@media (max-width: 576px) {
+    .image-frame {
+        height: 200px;
+        padding: 10px;
+    }
+    
+    .related-card-img {
+        width: 55px;
+        height: 55px;
+    }
+}
+
+/* ================================================================
+   AKHIR PERBAIKAN GAMBAR
+   ================================================================ */
 </style>
 @endpush
 
@@ -520,23 +625,102 @@ function tambahKeKeranjangLangsung(produkId) {
     box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
 }
 
+/* ================================================================
+   PERBAIKAN GAMBAR PRODUK - SEMUA GAMBAR MENJADI SERAGAM
+   ================================================================ */
+
+/* --- GAMBAR UTAMA PRODUK --- */
 .image-frame {
     overflow: hidden;
     border-radius: 20px;
     background: linear-gradient(135deg, var(--gray-bg), var(--green-soft));
     padding: 20px;
+    width: 100%;
+    height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .product-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Semua gambar utama SERAGAM */
     transition: transform 0.5s ease;
-    max-height: 280px;
-    width: auto;
-    margin: 0 auto;
+    border-radius: 12px;
 }
 
 .product-main-img:hover {
     transform: scale(1.05);
 }
+
+/* --- GAMBAR PRODUK TERKAIT / REKOMENDASI --- */
+.related-card-img {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 12px;
+    background: linear-gradient(135deg, var(--green-soft), #c8e6c9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.related-card:hover .related-card-img {
+    transform: scale(1.08);
+}
+
+.related-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Semua gambar rekomendasi SERAGAM */
+    border-radius: 50%;
+}
+
+.related-card-img i {
+    font-size: 2rem;
+    color: var(--green-primary);
+}
+
+/* --- RESPONSIVE UNTUK GAMBAR --- */
+@media (max-width: 992px) {
+    .image-frame {
+        height: 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    .image-frame {
+        height: 250px;
+        padding: 15px;
+    }
+    
+    .related-card-img {
+        width: 65px;
+        height: 65px;
+    }
+}
+
+@media (max-width: 576px) {
+    .image-frame {
+        height: 200px;
+        padding: 10px;
+    }
+    
+    .related-card-img {
+        width: 55px;
+        height: 55px;
+    }
+}
+
+/* ================================================================
+   AKHIR PERBAIKAN GAMBAR
+   ================================================================ */
 
 .no-image-wrapper {
     background: linear-gradient(135deg, var(--gray-bg), var(--green-soft));
@@ -752,34 +936,6 @@ function tambahKeKeranjangLangsung(produkId) {
     box-shadow: 0 15px 30px rgba(46, 125, 50, 0.15);
 }
 
-.related-card-img {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 12px;
-    background: linear-gradient(135deg, var(--green-soft), #c8e6c9);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease;
-}
-
-.related-card:hover .related-card-img {
-    transform: scale(1.08);
-}
-
-.related-card-img img {
-    width: 55px;
-    height: 55px;
-    object-fit: cover;
-    border-radius: 12px;
-}
-
-.related-card-img i {
-    font-size: 2rem;
-    color: var(--green-primary);
-}
-
 .related-card-title {
     font-size: 0.85rem;
     font-weight: 700;
@@ -838,16 +994,6 @@ function tambahKeKeranjangLangsung(produkId) {
 
     .add-to-cart-btn {
         padding: 12px 16px;
-    }
-
-    .related-card-img {
-        width: 65px;
-        height: 65px;
-    }
-
-    .related-card-img img {
-        width: 45px;
-        height: 45px;
     }
 
     .related-card-title {

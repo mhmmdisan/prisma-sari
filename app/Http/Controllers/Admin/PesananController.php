@@ -11,6 +11,7 @@ use App\Models\DetailPesanan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PesananController extends Controller
@@ -42,9 +43,6 @@ class PesananController extends Controller
         return view('admin.pesanan.show', compact('pesanan'));
     }
     
-    /**
-     * VERIFIKASI PEMBAYARAN - AJAX
-     */
     public function verifikasi($id)
     {
         try {
@@ -75,9 +73,6 @@ class PesananController extends Controller
         }
     }
     
-    /**
-     * UPDATE STATUS PESANAN - AJAX
-     */
     public function updateStatus(Request $request, $id)
     {
         try {
@@ -103,21 +98,15 @@ class PesananController extends Controller
         }
     }
     
-    /**
-     * FORM TAMBAH PESANAN MANUAL (WHATSAPP ORDER)
-     */
     public function createManual()
     {
         $pelanggan = User::where('role', 'pelanggan')->orderBy('name')->get();
         $metodePembayaran = MetodePembayaran::where('status_aktif', true)->get();
-        $kategoriList = KategoriProduk::all(); // Ambil semua kategori
+        $kategoriList = KategoriProduk::all();
         
         return view('admin.pesanan.create', compact('pelanggan', 'metodePembayaran', 'kategoriList'));
     }
     
-    /**
-     * SIMPAN PESANAN MANUAL (WHATSAPP ORDER) - AJAX
-     */
     public function storeManual(Request $request)
     {
         try {
@@ -139,19 +128,9 @@ class PesananController extends Controller
             
             $buktiPath = null;
             if ($request->hasFile('bukti_pembayaran')) {
-                $file = $request->file('bukti_pembayaran');
-                $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
-                
-                $destinationPath = public_path('storage/pembayaran');
-                
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0777, true);
-                }
-                
-                $file->move($destinationPath, $filename);
-                $buktiPath = 'storage/pembayaran/' . $filename;
-                
-                Log::info('Bukti pembayaran diupload ke: ' . $buktiPath);
+                $path = $request->file('bukti_pembayaran')->store('pembayaran', 'public');
+                $buktiPath = $path;
+                Log::info('Bukti pembayaran diupload ke storage: ' . $buktiPath);
             }
             
             $orderNumber = 'PS-WA-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
@@ -207,7 +186,12 @@ class PesananController extends Controller
      */
     public function edit($id)
     {
-        $pesanan = Pesanan::with('detailPesanan')->findOrFail($id);
+        $pesanan = Pesanan::with([
+            'detailPesanan',
+            'detailPesanan.customSnackbox',
+            'detailPesanan.customSnackbox.detail',
+            'detailPesanan.customSnackbox.detail.produk'
+        ])->findOrFail($id);
         
         $totalHitung = 0;
         foreach ($pesanan->detailPesanan as $item) {
@@ -252,20 +236,12 @@ class PesananController extends Controller
             
             $buktiPath = $pesanan->bukti_pembayaran;
             if ($request->hasFile('bukti_pembayaran')) {
-                if ($buktiPath && file_exists(public_path($buktiPath))) {
-                    @unlink(public_path($buktiPath));
+                if ($buktiPath && Storage::disk('public')->exists($buktiPath)) {
+                    Storage::disk('public')->delete($buktiPath);
                 }
                 
-                $file = $request->file('bukti_pembayaran');
-                $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
-                $destinationPath = public_path('storage/pembayaran');
-                
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0777, true);
-                }
-                
-                $file->move($destinationPath, $filename);
-                $buktiPath = 'storage/pembayaran/' . $filename;
+                $path = $request->file('bukti_pembayaran')->store('pembayaran', 'public');
+                $buktiPath = $path;
             }
             
             $pesanan->update([
@@ -279,15 +255,18 @@ class PesananController extends Controller
                 'bukti_pembayaran' => $buktiPath,
             ]);
             
+            // Hapus detail lama
             DetailPesanan::where('pesanan_id', $pesanan->id)->delete();
             
+            // Buat ulang detail dengan menyertakan custom_snackbox_id
             foreach ($request->detail_pesanan as $item) {
                 DetailPesanan::create([
-                    'pesanan_id' => $pesanan->id,
-                    'nama_item' => $item['nama_item'],
-                    'jumlah' => $item['jumlah'],
-                    'harga_satuan' => (int) $item['harga_satuan'],
-                    'subtotal' => (int) $item['jumlah'] * (int) $item['harga_satuan'],
+                    'pesanan_id'          => $pesanan->id,
+                    'nama_item'           => $item['nama_item'],
+                    'jumlah'              => $item['jumlah'],
+                    'harga_satuan'        => (int) $item['harga_satuan'],
+                    'subtotal'            => (int) $item['jumlah'] * (int) $item['harga_satuan'],
+                    'custom_snackbox_id'  => $item['custom_snackbox_id'] ?? null, 
                 ]);
             }
             
@@ -310,9 +289,6 @@ class PesananController extends Controller
         }
     }
     
-    /**
-     * HAPUS PESANAN - AJAX
-     */
     public function destroy($id)
     {
         try {

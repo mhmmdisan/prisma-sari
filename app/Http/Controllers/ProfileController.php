@@ -20,8 +20,16 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         
-        // Hitung total pesanan dan total pengeluaran
+        // Hitung total pesanan
         $totalPesanan = Pesanan::where('user_id', $user->id)->count();
+        
+        // 🔥 HITUNG PESANAN SELESAI
+        // Status yang dianggap selesai: 'selesai', 'diproses', 'dikirim', 'completed'
+        $pesananSelesai = Pesanan::where('user_id', $user->id)
+            ->whereIn('status', ['selesai', 'diproses', 'dikirim', 'completed'])
+            ->count();
+        
+        // Total pengeluaran (pesanan dengan pembayaran lunas)
         $totalPengeluaran = Pesanan::where('user_id', $user->id)
             ->where('status_pembayaran', 'lunas')
             ->sum('total_harga');
@@ -29,7 +37,12 @@ class ProfileController extends Controller
         // Format Rupiah
         $totalPengeluaranFormatted = 'Rp ' . number_format($totalPengeluaran, 0, ',', '.');
         
-        return view('profile.index', compact('user', 'totalPesanan', 'totalPengeluaranFormatted'));
+        return view('profile.index', compact(
+            'user', 
+            'totalPesanan', 
+            'pesananSelesai', 
+            'totalPengeluaranFormatted'
+        ));
     }
 
     /**
@@ -48,8 +61,6 @@ class ProfileController extends Controller
     public function update(Request $request): RedirectResponse
     {
         try {
-            \Log::info('Step 1: Request diterima', $request->all());
-            
             // Validasi data
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:255'],
@@ -59,8 +70,6 @@ class ProfileController extends Controller
                 'foto_profil' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
             ]);
 
-            \Log::info('Step 2: Validasi berhasil');
-
             $user = $request->user();
             
             // Update data langsung (tanpa array)
@@ -69,12 +78,7 @@ class ProfileController extends Controller
             $user->no_telepon = $request->no_telepon;
             $user->alamat = $request->alamat;
             
-            \Log::info('Step 3: Data diisi', [
-                'no_telepon' => $user->no_telepon,
-                'alamat' => $user->alamat
-            ]);
-            
-            // 🔥 PERBAIKAN: Handle upload foto profil (LANGSUNG KE PUBLIC/STORAGE/PROFIL) 🔥
+            // Handle upload foto profil
             if ($request->hasFile('foto_profil')) {
                 // Hapus foto lama jika ada
                 if ($user->foto_profil && file_exists(public_path($user->foto_profil))) {
@@ -86,7 +90,7 @@ class ProfileController extends Controller
                 // Buat nama file unik
                 $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
                 
-                // 🔥 TUJUAN LANGSUNG KE PUBLIC/STORAGE/PROFIL 🔥
+                // Tujuan langsung ke public/storage/profil
                 $destinationPath = public_path('storage/profil');
                 
                 // Buat folder jika belum ada
@@ -99,20 +103,10 @@ class ProfileController extends Controller
                 
                 // Simpan path ke database
                 $user->foto_profil = 'storage/profil/' . $filename;
-                
-                \Log::info('Step 4: Foto diupload ke: ' . $user->foto_profil);
-                \Log::info('Step 4: File ditempatkan di: ' . $destinationPath . '/' . $filename);
             }
 
             // Simpan ke database
-            $result = $user->save();
-            \Log::info('Step 5: Hasil save: ' . ($result ? 'BERHASIL' : 'GAGAL'));
-            
-            \Log::info('Step 6: Data setelah save:', [
-                'no_telepon' => $user->no_telepon,
-                'alamat' => $user->alamat,
-                'foto_profil' => $user->foto_profil
-            ]);
+            $user->save();
 
             if ($user->wasChanged('email')) {
                 $user->email_verified_at = null;
@@ -122,12 +116,9 @@ class ProfileController extends Controller
             return redirect()->route('profile.index')->with('success', 'Profil berhasil diperbarui!');
             
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Validasi gagal: ' . $e->getMessage());
             throw $e;
         } catch (\Exception $e) {
             \Log::error('Error update profil: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-            
             return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
     }

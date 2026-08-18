@@ -16,6 +16,7 @@ return new class extends Migration
             $table->text('deskripsi')->nullable();
             $table->string('gambar')->nullable();
             $table->integer('min_order')->default(1);
+            $table->boolean('is_snackbox_only')->default(false);
             $table->timestamps();
         });
     }

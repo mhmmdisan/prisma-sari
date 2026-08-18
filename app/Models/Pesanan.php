@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage; // Tambahkan ini
 
 class Pesanan extends Model
 {
@@ -106,10 +106,34 @@ class Pesanan extends Model
         return 'Rp ' . number_format($this->total_harga, 0, ',', '.');
     }
 
-    // URL bukti pembayaran
+    // ========== ACCESSOR BUKTI PEMBAYARAN ==========
+    
+    /**
+     * URL bukti pembayaran - dengan pengecekan file
+     */
     public function getBuktiPembayaranUrlAttribute()
     {
-        return $this->bukti_pembayaran ? asset('storage/pembayaran/' . $this->bukti_pembayaran) : null;
+        if (!$this->bukti_pembayaran) {
+            return null;
+        }
+        
+        // Cek apakah file benar-benar ada di storage
+        if (Storage::disk('public')->exists($this->bukti_pembayaran)) {
+            return asset('storage/' . $this->bukti_pembayaran);
+        }
+        
+        return null; // file tidak ditemukan
+    }
+    
+    /**
+     * Cek apakah file bukti pembayaran ada di storage
+     */
+    public function getBuktiPembayaranExistsAttribute()
+    {
+        if (!$this->bukti_pembayaran) {
+            return false;
+        }
+        return Storage::disk('public')->exists($this->bukti_pembayaran);
     }
 
     // ========== HELPER ==========

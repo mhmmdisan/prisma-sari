@@ -9,12 +9,24 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
     /* ============================================
-           SIDEBAR PREMIUM - GRADIENT EMAS KE HIJAU
-           ============================================ */
+       GLOBAL
+       ============================================ */
+    html, body {
+        overflow-x: hidden; /* cegah scroll horizontal */
+        margin: 0;
+        padding: 0;
+        background: #f5f7fa;
+    }
+
+    /* ============================================
+       SIDEBAR PREMIUM - GRADIENT EMAS KE HIJAU
+       ============================================ */
     .sidebar-premium {
         background: linear-gradient(180deg, #ffc107 0%, #2e7d32 50%, #1b5e20 100%);
         box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
+        height: 100vh;
+        overflow-y: auto;
     }
 
     .sidebar-premium .nav-link {
@@ -62,61 +74,152 @@
         margin-bottom: 15px;
     }
 
+    .logo-area .brand-logo {
+        display: block;
+        margin: 0 auto 10px auto;
+        height: 75px;
+        width: auto;
+        filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+        transition: transform 0.3s ease;
+    }
+
+    .logo-area .brand-logo:hover {
+        transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+        .logo-area .brand-logo {
+            height: 60px;
+        }
+    }
+
     .logo-area h5 {
         font-weight: 700;
         margin-bottom: 5px;
         letter-spacing: 1px;
+        color: white;
     }
 
     .logo-area small {
         font-size: 0.7rem;
         opacity: 0.8;
-    }
-
-    .bg-white-20 {
-        background-color: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.85);
     }
 
     /* ============================================
-           MAIN CONTENT STYLING
-           ============================================ */
+       MAIN CONTENT
+       ============================================ */
     .main-content {
         background: #f5f7fa;
         min-height: 100vh;
+        padding: 0; /* hapus padding di sini, akan diatur di container */
     }
 
-    /* Responsive */
+    /* ============================================
+       NAVBAR MOBILE
+       ============================================ */
+    .navbar-mobile {
+        background: white;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e9ecef;
+        display: none;
+    }
+    .navbar-mobile .btn-toggle {
+        background: none;
+        border: none;
+        font-size: 1.6rem;
+        color: #1b5e20;
+        padding: 0;
+        line-height: 1;
+    }
+    .navbar-mobile .brand-mobile {
+        font-weight: 700;
+        color: #1b5e20;
+        font-size: 1.2rem;
+    }
+
+    /* ============================================
+       RESPONSIVE - MOBILE
+       ============================================ */
     @media (max-width: 768px) {
+        /* Sidebar menjadi offcanvas */
         .sidebar-premium {
             position: fixed;
-            z-index: 1000;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            z-index: 1050;
             transform: translateX(-100%);
             transition: transform 0.3s ease;
+            border-radius: 0 20px 20px 0;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.2);
         }
-
         .sidebar-premium.show {
             transform: translateX(0);
         }
 
+        /* Backdrop */
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.4);
+            z-index: 1045;
+            backdrop-filter: blur(2px);
+        }
+        .sidebar-backdrop.show {
+            display: block;
+        }
+
+        /* Tampilkan navbar mobile */
+        .navbar-mobile {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Main content: lebar penuh, tanpa padding berlebih */
         .main-content {
             width: 100% !important;
+            padding: 0 !important;
+            min-height: 100vh;
+        }
+
+        /* Container dalam main content */
+        .main-content .container-fluid {
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+            padding-top: 16px !important;
+            padding-bottom: 16px !important;
+        }
+
+        /* Hilangkan grid column yang kosong di mobile */
+        .row.g-0 {
+            margin: 0;
+            padding: 0;
+        }
+        .row.g-0 > [class*="col-"] {
+            padding: 0;
         }
     }
 
-    /* Scrollbar styling */
+    /* ============================================
+       SCROLLBAR
+       ============================================ */
     ::-webkit-scrollbar {
         width: 6px;
     }
-
     ::-webkit-scrollbar-track {
         background: #f1f1f1;
     }
-
     ::-webkit-scrollbar-thumb {
         background: #ffc107;
         border-radius: 10px;
     }
-
     ::-webkit-scrollbar-thumb:hover {
         background: #1b5e20;
     }
@@ -125,25 +228,15 @@
 </head>
 
 <body>
+    <!-- Backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
     <div class="container-fluid p-0">
         <div class="row g-0">
-            <!-- Sidebar Premium -->
-            <nav class="col-md-2 sidebar-premium vh-100 p-0 position-sticky top-0">
-                <!-- Logo Area dengan Gambar -->
+            <!-- Sidebar -->
+            <nav class="col-md-2 sidebar-premium vh-100 p-0" id="sidebar">
                 <div class="logo-area">
-                    @php
-                    $logoPath = asset('images/logo-prisma-sari.png');
-                    $logoExists = file_exists(public_path('images/logo-prisma-sari.png'));
-                    @endphp
-                    @if($logoExists)
-                    <img src="{{ $logoPath }}" alt="Logo Prisma Sari"
-                        style="width: 70px; height: 70px; object-fit: contain; margin-bottom: 10px; border-radius: 12px;">
-                    @else
-                    <div class="mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle bg-white-20"
-                        style="width: 70px; height: 70px;">
-                        <i class="bi bi-cake2 fs-1 text-white"></i>
-                    </div>
-                    @endif
+                    <img src="{{ asset('images/logowebsite.png') }}" alt="Prisma Sari Catering" class="brand-logo">
                     <h5 class="text-white mb-0 mt-2 fw-bold">Prisma Sari</h5>
                     <small class="text-white-50">Panel Pemilik</small>
                 </div>
@@ -180,14 +273,54 @@
             </nav>
 
             <!-- Main Content -->
-            <main class="col-md-10 main-content px-4 py-3 ms-auto">
-                @yield('content')
+            <main class="col-md-10 main-content" id="mainContent">
+                <!-- Navbar Mobile -->
+                <div class="navbar-mobile">
+                    <button class="btn-toggle" id="sidebarToggle">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <span class="brand-mobile">Prisma Sari</span>
+                    <div style="width: 32px;"></div>
+                </div>
+
+                <!-- Container konten -->
+                <div class="container-fluid px-4 py-3">
+                    @yield('content')
+                </div>
             </main>
         </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            const toggleBtn = document.getElementById('sidebarToggle');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('show');
+                backdrop.classList.toggle('show');
+                document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', toggleSidebar);
+            }
+            if (backdrop) {
+                backdrop.addEventListener('click', toggleSidebar);
+            }
+
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768) {
+                    sidebar.classList.remove('show');
+                    backdrop.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+    </script>
     @stack('scripts')
 </body>
 

@@ -110,6 +110,43 @@
                                         <td>
                                             <i class="bi bi-box-seam text-success me-2"></i>
                                             {{ $detail->nama_item }}
+                                            
+                                            {{-- TAMPILAN CUSTOM SNACKBOX --}}
+                                            @if($detail->customSnackbox)
+                                                <div class="mt-2 p-2 bg-light rounded-3">
+                                                    <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                                                        <span class="badge bg-warning text-dark">
+                                                            {{ $detail->customSnackbox->nama_ukuran ?? $detail->customSnackbox->kode_ukuran }}
+                                                        </span>
+                                                        <span class="badge bg-success">
+                                                            {{ $detail->customSnackbox->jumlah_box }} box
+                                                        </span>
+                                                    </div>
+                                                    <div class="small text-muted">
+                                                        <strong>Isi Snackbox:</strong>
+                                                        <div class="mt-1 ps-2" style="border-left: 2px solid #ffc107;">
+                                                            @if($detail->customSnackbox->detail && $detail->customSnackbox->detail->count() > 0)
+                                                                @foreach($detail->customSnackbox->detail as $snackDetail)
+                                                                    <div class="d-flex justify-content-between mb-1">
+                                                                        <span>• {{ $snackDetail->produk->nama_produk ?? 'Produk' }}</span>
+                                                                        <span class="text-success">{{ $snackDetail->jumlah }} pcs</span>
+                                                                    </div>
+                                                                @endforeach
+                                                            @else
+                                                                <span class="text-muted">Tidak ada detail produk</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                            
+                                            {{-- TAMPILKAN KATEGORI UNTUK PRODUK BIASA --}}
+                                            @if($detail->produk && $detail->produk->kategori)
+                                                <small class="text-muted d-block mt-1">
+                                                    <i class="bi bi-tag me-1"></i> 
+                                                    {{ $detail->produk->kategori->nama_kategori }}
+                                                </small>
+                                            @endif
                                         </td>
                                         <td class="text-center">
                                             <span
@@ -156,20 +193,22 @@
                                 <div>
                                     @php
                                     $statusClass = match($pesanan->status) {
-                                    'menunggu_pembayaran' => 'badge-status-warning',
-                                    'diproses' => 'badge-status-primary',
-                                    'terlambat' => 'badge-status-danger',
-                                    'selesai' => 'badge-status-success',
-                                    'dibatalkan' => 'badge-status-secondary',
-                                    default => 'badge-status-info'
+                                        'menunggu_pembayaran' => 'badge-status-warning',
+                                        'menunggu_verifikasi' => 'badge-status-info',   
+                                        'diproses' => 'badge-status-primary',
+                                        'terlambat' => 'badge-status-danger',
+                                        'selesai' => 'badge-status-success',
+                                        'dibatalkan' => 'badge-status-secondary',
+                                        default => 'badge-status-info'
                                     };
                                     $statusLabel = match($pesanan->status) {
-                                    'menunggu_pembayaran' => 'Menunggu Pembayaran',
-                                    'diproses' => 'Diproses',
-                                    'terlambat' => 'Terlambat ⚠️',
-                                    'selesai' => 'Selesai',
-                                    'dibatalkan' => 'Dibatalkan',
-                                    default => ucfirst($pesanan->status)
+                                        'menunggu_pembayaran' => 'Menunggu Pembayaran',
+                                        'menunggu_verifikasi' => 'Menunggu Verifikasi', 
+                                        'diproses' => 'Diproses',
+                                        'terlambat' => 'Terlambat ⚠️',
+                                        'selesai' => 'Selesai',
+                                        'dibatalkan' => 'Dibatalkan',
+                                        default => ucfirst($pesanan->status)
                                     };
                                     @endphp
                                     <span class="{{ $statusClass }} px-3 py-2 fs-6">{{ $statusLabel }}</span>
@@ -196,7 +235,7 @@
                 </div>
             </div>
 
-            <!-- KOLOM KANAN: Status Pembayaran (DIPERBAIKI) -->
+            <!-- KOLOM KANAN: Status Pembayaran -->
             <div class="col-md-4">
                 <div class="card border-0 rounded-4 shadow-sm mb-4 sticky-lg-top hover-card" style="top: 20px;">
                     <div class="card-header bg-white rounded-top-4 py-3" style="border-bottom: 2px solid #ffc107;">
@@ -218,14 +257,14 @@
                             </div>
                             <h4 class="mt-2 text-warning">Menunggu Konfirmasi</h4>
                             @else
-                            <div class="status-icon-danger">
-                                <i class="bi bi-hourglass-split"></i>
+                            <div class="d-flex align-items-center justify-content-center gap-3 mb-2">
+                                <i class="bi bi-hourglass-split" style="font-size: 2.5rem; color: #dc3545;"></i>
+                                <h4 class="mb-0 text-danger">Belum Dibayar</h4>
                             </div>
-                            <h4 class="mt-2 text-danger">Belum Dibayar</h4>
                             @endif
                         </div>
 
-                        <!-- 🔥 PESANAN YANG DIBATALKAN OTOMATIS KARENA EXPIRED -->
+                        <!-- PESANAN YANG DIBATALKAN OTOMATIS KARENA EXPIRED -->
                         @if($pesanan->status == 'dibatalkan' && $pesanan->expired_at < now())
                         <div class="alert-expired-custom mb-3 text-start">
                             <div class="d-flex align-items-center gap-2 mb-2">
@@ -243,15 +282,33 @@
                             </div>
                         </div>
 
-                        <!-- 🔥 PESANAN YANG DIBATALKAN OLEH USER (BUKAN EXPIRED) -->
+                        <!-- PESANAN YANG DIBATALKAN OLEH USER (BUKAN EXPIRED) -->
                         @elseif($pesanan->status == 'dibatalkan')
-                        <div class="alert-success-custom text-center mb-3">
-                            <i class="bi bi-check-circle me-2"></i>
-                            <strong>✓ Pesanan Dibatalkan</strong>
-                            <div class="small mt-1">Pesanan dibatalkan atas permintaan Anda.</div>
+                        <div class="cancellation-card d-flex align-items-center justify-content-center gap-3 p-2 bg-success-subtle border border-success-subtle rounded-3 mb-3">
+                            <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; flex-shrink: 0;">
+                                <i class="bi bi-check-lg text-white" style="font-size: 22px;"></i>
+                            </div>
+                            <div class="text-start">
+                                <h6 class="mb-0 text-success fw-bold">Pesanan Berhasil Dibatalkan</h6>
+                                <p class="mb-0 small text-secondary">Pesanan dibatalkan atas permintaan Anda.</p>
+                            </div>
                         </div>
 
-                        <!-- 🔥 PESANAN YANG MASIH MENUNGGU PEMBAYARAN TAPI SUDAH EXPIRED -->
+                        <!-- PESANAN YANG MENUNGGU VERIFIKASI (SUDAH UPLOAD BUKTI) -->
+                        @elseif($pesanan->status == 'menunggu_verifikasi')
+                        <div class="alert-info-custom mb-3 text-start">
+                            <i class="bi bi-clock-history me-2"></i> 
+                            <strong>📤 Bukti pembayaran telah diupload!</strong><br>
+                            Menunggu verifikasi dari admin. Silakan cek secara berkala.
+                            @if(isset($pesanan->expired_at) && $pesanan->expired_at > now())
+                            <div class="small mt-1 text-muted">
+                                <i class="bi bi-clock me-1"></i> Batas waktu: 
+                                {{ \Carbon\Carbon::parse($pesanan->expired_at)->locale('id')->translatedFormat('d F Y H:i') }} WIB
+                            </div>
+                            @endif
+                        </div>
+
+                        <!-- PESANAN YANG MASIH MENUNGGU PEMBAYARAN TAPI SUDAH EXPIRED -->
                         @elseif($pesanan->status_pembayaran == 'belum_bayar' && $pesanan->status != 'dibatalkan')
                             @if(isset($pesanan->expired_at) && now() > $pesanan->expired_at)
                             <div class="alert-expired-custom mb-3 text-start">
@@ -298,7 +355,6 @@
 
                         <!-- ========== TOMBOL AKSI (UPLOAD BUKTI & BATALKAN) ========== -->
                         @if($pesanan->status_pembayaran == 'belum_bayar' && $pesanan->status != 'dibatalkan')
-                            <!-- 🔥 TOMBOL UPLOAD BUKTI HANYA TAMPIL JIKA BELUM EXPIRED -->
                             @if(isset($pesanan->expired_at) && now() <= $pesanan->expired_at)
                                 <button type="button" class="btn btn-success rounded-pill w-100" onclick="openUploadModal()">
                                     <i class="bi bi-credit-card me-2"></i> Upload Bukti Pembayaran
@@ -311,12 +367,26 @@
                             @endif
                         @endif
 
-                        <!-- Tombol Lihat Bukti -->
-                        @if($pesanan->status_pembayaran == 'menunggu_konfirmasi' && $pesanan->bukti_pembayaran)
-                        <a href="{{ asset($pesanan->bukti_pembayaran) }}" target="_blank"
-                            class="btn btn-outline-info rounded-pill w-100 mt-2">
-                            <i class="bi bi-image me-2"></i> Lihat Bukti Pembayaran
-                        </a>
+                        <!-- Tombol Lihat Bukti menggunakan accessor dan pengecekan file dari model -->
+                        @if(($pesanan->status_pembayaran == 'menunggu_konfirmasi' || $pesanan->status == 'menunggu_verifikasi') && $pesanan->bukti_pembayaran)
+                            @if($pesanan->bukti_pembayaran_exists)
+                                <a href="{{ $pesanan->bukti_pembayaran_url }}" target="_blank"
+                                    class="btn btn-outline-info rounded-pill w-100 mt-2">
+                                    <i class="bi bi-image me-2"></i> Lihat Bukti Pembayaran
+                                </a>
+                            @else
+                                <div class="alert-warning-custom mt-2 text-start">
+                                    <i class="bi bi-exclamation-triangle me-2"></i> 
+                                    File bukti tidak ditemukan.
+                                </div>
+                            @endif
+                        @endif
+
+                        <!-- Tombol EDIT BUKTI (jika status menunggu_verifikasi atau menunggu_konfirmasi dan belum expired) -->
+                        @if(($pesanan->status == 'menunggu_verifikasi' || $pesanan->status_pembayaran == 'menunggu_konfirmasi') && $pesanan->expired_at > now())
+                        <button type="button" class="btn btn-warning rounded-pill w-100 mt-2" onclick="openEditBuktiModal()">
+                            <i class="bi bi-pencil-square me-2"></i> Edit Bukti Pembayaran
+                        </button>
                         @endif
 
                         <!-- Tombol Batalkan (HANYA UNTUK PESANAN YANG BELUM EXPIRED DAN BELUM DIBATALKAN) -->
@@ -332,134 +402,173 @@
     </div>
 </div>
 
-<!-- MODAL UPLOAD PEMBAYARAN - PRESISI DI TENGAH (SAMA PERSIS DENGAN MODAL CHECKOUT KERANJANG) -->
-<div id="uploadModal"
-    style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; margin: 0; padding: 0;">
-
-    <!-- Gunakan align-items: CENTER untuk posisi tengah sempurna -->
-    <div
-        style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 20px; box-sizing: border-box; margin: 0;">
-
-        <div
-            style="background: white; border-radius: 28px; max-width: 550px; width: 100%; margin: 0 auto; box-shadow: 0 30px 60px rgba(0,0,0,0.4); overflow: hidden;">
-
-            <!-- Header Modal -->
-            <div
-                style="background: linear-gradient(135deg, #2e7d32, #1b5e20); color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center;">
-                <h5 style="margin: 0; font-size: 1rem; font-weight: 600;">
-                    <i class="bi bi-upload me-2"></i> Upload Bukti Pembayaran
-                </h5>
-                <button type="button" onclick="closeUploadModal()"
-                    style="background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
-                    onmouseover="this.style.background='rgba(255,255,255,0.3)'"
-                    onmouseout="this.style.background='rgba(255,255,255,0.2)'">&times;</button>
-            </div>
-
-            <!-- Body Modal -->
-            <div style="padding: 20px 24px; max-height: 60vh; overflow-y: auto;">
-                <form method="POST" action="{{ route('pelanggan.pembayaran.upload', $pesanan->id) }}"
-                    enctype="multipart/form-data" id="formUploadBukti">
-                    @csrf
-
-                    <!-- Total Pembayaran -->
-                    <div
-                        style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 12px 16px; border-radius: 14px; text-align: center; margin-bottom: 20px; border-left: 4px solid #2e7d32;">
-                        <div style="font-size: 0.75rem; color: #2e7d32; margin-bottom: 4px;">Total yang harus dibayar
-                        </div>
-                        <div style="font-size: 1.2rem; font-weight: 700; color: #1b5e20;">
-                            Rp {{ number_format($pesanan->total_harga, 0, ',', '.') }}
-                        </div>
+<!-- ============================================================ -->
+<!-- MODAL UPLOAD PEMBAYARAN - DIPERBAIKI                        -->
+<!-- ============================================================ -->
+<div id="uploadModal" class="modal-overlay-custom">
+    <div class="modal-content-custom">
+        <div class="modal-header-custom">
+            <h5><i class="bi bi-upload me-2"></i> Upload Bukti Pembayaran</h5>
+            <button type="button" onclick="closeUploadModal()" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body-custom">
+            <form method="POST" action="{{ route('pelanggan.pembayaran.upload', $pesanan->id) }}" enctype="multipart/form-data" id="formUploadBukti">
+                @csrf
+                <!-- Total -->
+                <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 10px 14px; border-radius: 10px; text-align: center; margin-bottom: 16px; border-left: 4px solid #2e7d32;">
+                    <div style="font-size: 0.7rem; color: #2e7d32; margin-bottom: 4px;">Total yang harus dibayar</div>
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #1b5e20;">
+                        Rp {{ number_format($pesanan->total_harga, 0, ',', '.') }}
                     </div>
+                </div>
 
-                    <!-- Pilih Bank Tujuan -->
-                    <div style="margin-bottom: 16px;">
-                        <label
-                            style="display: block; font-weight: 600; margin-bottom: 10px; color: #555; font-size: 0.85rem;">
-                            Pilih Bank Tujuan <span style="color: red;">*</span>
-                        </label>
-
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            @foreach($metodePembayaran as $bank)
-                            @if($bank->status_aktif)
-                            <div class="bank-card" data-bank-id="{{ $bank->id }}"
-                                data-bank-nama="{{ $bank->nama_bank }}" data-bank-norek="{{ $bank->nomor_rekening }}"
-                                data-bank-atas-nama="{{ $bank->atas_nama }}"
-                                data-bank-logo="{{ $bank->logo_bank ? asset('storage/bank/' . $bank->logo_bank) : '' }}"
-                                style="border: 1.5px solid #e5e7eb; border-radius: 14px; padding: 12px 14px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px; background: white;">
-
-                                <div
-                                    style="flex-shrink: 0; width: 40px; height: 40px; background: #f3f4f6; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                                    @if($bank->logo_bank)
-                                    <img src="{{ asset('storage/bank/' . $bank->logo_bank) }}"
-                                        alt="{{ $bank->nama_bank }}"
-                                        style="width: 32px; height: 32px; object-fit: contain;">
-                                    @else
-                                    <i class="bi bi-bank2" style="font-size: 20px; color: #2e7d32;"></i>
-                                    @endif
-                                </div>
-
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 700; color: #1b5e20; font-size: 0.85rem;">
-                                        {{ $bank->nama_bank }}</div>
-                                    <div style="font-size: 0.7rem; color: #6b7280;">{{ $bank->nomor_rekening }}</div>
-                                    <div style="font-size: 0.65rem; color: #9ca3af;">a.n. {{ $bank->atas_nama }}</div>
-                                </div>
-
-                                <div class="radio-check"
-                                    style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d1d5db; background: white; flex-shrink: 0;">
-                                </div>
+                <!-- Pilih Bank -->
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #555; font-size: 0.8rem;">Pilih Bank Tujuan <span style="color: red;">*</span></label>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        @foreach($metodePembayaran as $bank)
+                        @if($bank->status_aktif)
+                        <div class="bank-card" data-bank-id="{{ $bank->id }}"
+                            data-bank-nama="{{ $bank->nama_bank }}" data-bank-norek="{{ $bank->nomor_rekening }}"
+                            data-bank-atas-nama="{{ $bank->atas_nama }}"
+                            data-bank-logo="{{ $bank->logo_bank ? asset('storage/bank/' . $bank->logo_bank) : '' }}"
+                            style="border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 10px; background: white;">
+                            <div style="flex-shrink: 0; width: 36px; height: 36px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                @if($bank->logo_bank)
+                                <img src="{{ asset('storage/bank/' . $bank->logo_bank) }}" alt="{{ $bank->nama_bank }}" style="width: 28px; height: 28px; object-fit: contain;">
+                                @else
+                                <i class="bi bi-bank2" style="font-size: 18px; color: #2e7d32;"></i>
+                                @endif
                             </div>
-                            @endif
-                            @endforeach
-                        </div>
-
-                        <input type="hidden" name="id_metode_pembayaran" id="selectedBankId" required>
-                    </div>
-
-                    <!-- Informasi Bank Terpilih -->
-                    <div id="selectedBankInfo"
-                        style="display: none; background: #f0fdf4; border-radius: 12px; padding: 10px 14px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <img id="selectedBankLogo" src="" alt=""
-                                style="width: 32px; height: 32px; object-fit: contain; border-radius: 8px;">
-                            <div>
-                                <div class="fw-bold text-success" id="selectedBankNama" style="font-size: 0.8rem;">
-                                </div>
-                                <div class="small text-muted" id="selectedBankNoRek" style="font-size: 0.65rem;"></div>
-                                <div class="small text-muted" id="selectedBankAtasNama" style="font-size: 0.6rem;">
-                                </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; color: #1b5e20; font-size: 0.8rem;">{{ $bank->nama_bank }}</div>
+                                <div style="font-size: 0.65rem; color: #4b5563;">{{ $bank->nomor_rekening }}</div>
+                                <div style="font-size: 0.6rem; color: #4b5563;">a.n. {{ $bank->atas_nama }}</div>
                             </div>
+                            <div class="radio-check" style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d1d5db; background: white; flex-shrink: 0;"></div>
+                        </div>
+                        @endif
+                        @endforeach
+                    </div>
+                    <input type="hidden" name="id_metode_pembayaran" id="selectedBankId" required>
+                </div>
+
+                <!-- Info Bank -->
+                <div id="selectedBankInfo" style="display: none; background: #f0fdf4; border-radius: 10px; padding: 8px 12px; margin-bottom: 16px; border-left: 4px solid #ffc107;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img id="selectedBankLogo" src="" alt="" style="width: 28px; height: 28px; object-fit: contain; border-radius: 6px;">
+                        <div>
+                            <div class="fw-bold text-success" id="selectedBankNama" style="font-size: 0.75rem;"></div>
+                            <div class="small" id="selectedBankNoRek" style="font-size: 0.6rem; color: #4b5563;"></div>
+                            <div class="small" id="selectedBankAtasNama" style="font-size: 0.55rem; color: #4b5563;"></div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Upload Bukti Transfer -->
-                    <div style="margin-bottom: 20px;">
-                        <label
-                            style="display: block; font-weight: 600; margin-bottom: 8px; color: #555; font-size: 0.85rem;">
-                            Upload Bukti Transfer <span style="color: red;">*</span>
-                        </label>
-                        <input type="file" name="bukti_pembayaran" id="bukti_pembayaran"
-                            style="width: 100%; padding: 10px 12px; border-radius: 12px; border: 1.5px solid #e5e7eb; font-size: 0.85rem; background: #f8f9fa;"
-                            accept="image/*" required>
-                        <div style="font-size: 0.65rem; color: #9ca3af; margin-top: 6px;">
-                            <i class="bi bi-info-circle"></i> Format: JPG, PNG. Maks: 2MB
+                <!-- Upload File -->
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #555; font-size: 0.8rem;">Upload Bukti Transfer <span style="color: red;">*</span></label>
+                    <input type="file" name="bukti_pembayaran" id="bukti_pembayaran"
+                        title="Pilih file bukti transfer (JPG/PNG, maks 2MB)"
+                        style="width: 100%; padding: 8px 10px; border-radius: 10px; border: 1.5px solid #e5e7eb; font-size: 0.8rem; background: #f8f9fa;"
+                        accept="image/*" required>
+                    <div style="font-size: 0.6rem; color: #9ca3af; margin-top: 4px;">
+                        <i class="bi bi-info-circle"></i> Format: JPG, PNG. Maks: 2MB
+                    </div>
+                </div>
+
+                <!-- Footer sticky -->
+                <div class="modal-footer-sticky">
+                    <button type="button" onclick="closeUploadModal()" class="btn-modal-cancel">Batal</button>
+                    <button type="submit" class="btn-modal-submit">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL EDIT BUKTI PEMBAYARAN - DIPERBAIKI                    -->
+<!-- ============================================================ -->
+<div id="editBuktiModal" class="modal-overlay-custom">
+    <div class="modal-content-custom">
+        <div class="modal-header-custom">
+            <h5><i class="bi bi-pencil-square me-2"></i> Edit Bukti Pembayaran</h5>
+            <button type="button" onclick="closeEditBuktiModal()" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body-custom">
+            <form method="POST" action="{{ route('pelanggan.pembayaran.update-bukti', $pesanan->id) }}" enctype="multipart/form-data" id="formEditBukti">
+                @csrf
+                @method('PUT')
+                <!-- Total -->
+                <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 10px 14px; border-radius: 10px; text-align: center; margin-bottom: 16px; border-left: 4px solid #2e7d32;">
+                    <div style="font-size: 0.7rem; color: #2e7d32; margin-bottom: 4px;">Total yang harus dibayar</div>
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #1b5e20;">
+                        Rp {{ number_format($pesanan->total_harga, 0, ',', '.') }}
+                    </div>
+                </div>
+
+                <!-- Pilih Bank -->
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #555; font-size: 0.8rem;">Pilih Bank Tujuan <span style="color: red;">*</span></label>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        @foreach($metodePembayaran as $bank)
+                        @if($bank->status_aktif)
+                        <div class="bank-card-edit" data-bank-id="{{ $bank->id }}"
+                            data-bank-nama="{{ $bank->nama_bank }}" data-bank-norek="{{ $bank->nomor_rekening }}"
+                            data-bank-atas-nama="{{ $bank->atas_nama }}"
+                            data-bank-logo="{{ $bank->logo_bank ? asset('storage/bank/' . $bank->logo_bank) : '' }}"
+                            style="border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 10px; background: white;">
+                            <div style="flex-shrink: 0; width: 36px; height: 36px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                @if($bank->logo_bank)
+                                <img src="{{ asset('storage/bank/' . $bank->logo_bank) }}" alt="{{ $bank->nama_bank }}" style="width: 28px; height: 28px; object-fit: contain;">
+                                @else
+                                <i class="bi bi-bank2" style="font-size: 18px; color: #2e7d32;"></i>
+                                @endif
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; color: #1b5e20; font-size: 0.8rem;">{{ $bank->nama_bank }}</div>
+                                <div style="font-size: 0.65rem; color: #4b5563;">{{ $bank->nomor_rekening }}</div>
+                                <div style="font-size: 0.6rem; color: #4b5563;">a.n. {{ $bank->atas_nama }}</div>
+                            </div>
+                            <div class="radio-check-edit" style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d1d5db; background: white; flex-shrink: 0;"></div>
+                        </div>
+                        @endif
+                        @endforeach
+                    </div>
+                    <input type="hidden" name="id_metode_pembayaran" id="editSelectedBankId" required>
+                </div>
+
+                <!-- Info Bank -->
+                <div id="editSelectedBankInfo" style="display: none; background: #f0fdf4; border-radius: 10px; padding: 8px 12px; margin-bottom: 16px; border-left: 4px solid #ffc107;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img id="editSelectedBankLogo" src="" alt="" style="width: 28px; height: 28px; object-fit: contain; border-radius: 6px;">
+                        <div>
+                            <div class="fw-bold text-success" id="editSelectedBankNama" style="font-size: 0.75rem;"></div>
+                            <div class="small" id="editSelectedBankNoRek" style="font-size: 0.6rem; color: #4b5563;"></div>
+                            <div class="small" id="editSelectedBankAtasNama" style="font-size: 0.55rem; color: #4b5563;"></div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Tombol Aksi -->
-                    <div
-                        style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 16px; margin-top: 8px; border-top: 1px solid #f0f0f0;">
-                        <button type="button" onclick="closeUploadModal()"
-                            style="padding: 8px 20px; border-radius: 50px; border: 1px solid #e5e7eb; background: white; cursor: pointer; font-weight: 500; font-size: 0.8rem;">
-                            <i class="bi bi-x-circle me-1"></i> Batal
-                        </button>
-                        <button type="submit"
-                            style="padding: 8px 24px; border-radius: 50px; background: linear-gradient(135deg, #2e7d32, #1b5e20); color: white; border: none; cursor: pointer; font-weight: 500; font-size: 0.8rem;">
-                            <i class="bi bi-upload me-1"></i> Upload
-                        </button>
+                <!-- Upload File -->
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #555; font-size: 0.8rem;">Upload Bukti Transfer Baru <span style="color: red;">*</span></label>
+                    <input type="file" name="bukti_pembayaran" id="edit_bukti_pembayaran"
+                        title="Pilih file bukti transfer baru (JPG/PNG, maks 2MB)"
+                        style="width: 100%; padding: 8px 10px; border-radius: 10px; border: 1.5px solid #e5e7eb; font-size: 0.8rem; background: #f8f9fa;"
+                        accept="image/*" required>
+                    <div style="font-size: 0.6rem; color: #9ca3af; margin-top: 4px;">
+                        <i class="bi bi-info-circle"></i> Format: JPG, PNG. Maks: 2MB
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <!-- Footer sticky -->
+                <div class="modal-footer-sticky">
+                    <button type="button" onclick="closeEditBuktiModal()" class="btn-modal-cancel">Batal</button>
+                    <button type="submit" class="btn-modal-submit">Perbarui Bukti</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -467,21 +576,15 @@
 <!-- MODAL KONFIRMASI BATALKAN PESANAN -->
 <div id="confirmCancelModal"
     style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100000; margin: 0; padding: 0;">
-
-    <div
-        style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 20px; box-sizing: border-box;">
-        <div
-            style="background: white; border-radius: 28px; max-width: 400px; width: 100%; margin: 0 auto; box-shadow: 0 30px 60px rgba(0,0,0,0.4); overflow: hidden;">
-
-            <div
-                style="background: linear-gradient(135deg, #dc3545, #c62828); color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 20px; box-sizing: border-box;">
+        <div style="background: white; border-radius: 28px; max-width: 400px; width: 100%; margin: 0 auto; box-shadow: 0 30px 60px rgba(0,0,0,0.4); overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #dc3545, #c62828); color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center;">
                 <h5 style="margin: 0; font-size: 1rem; font-weight: 600;">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i> Konfirmasi Batalkan Pesanan
                 </h5>
                 <button type="button" onclick="closeConfirmCancelModal()"
                     style="background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
             </div>
-
             <div style="padding: 24px; text-align: center;">
                 <i class="bi bi-question-circle" style="font-size: 60px; color: #dc3545;"></i>
                 <h5 class="mt-3">Apakah Anda yakin?</h5>
@@ -508,7 +611,6 @@
     position: relative;
     min-height: 100vh;
 }
-
 .batik-bg::before {
     content: "";
     position: absolute;
@@ -521,400 +623,281 @@
     background-size: 180px;
     pointer-events: none;
 }
+.container.position-relative { position: relative; z-index: 2; }
+.breadcrumb { background: white !important; border-radius: 50px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important; }
+.breadcrumb a { font-weight: 500; }
+.breadcrumb a:hover { color: #ffc107 !important; }
+.alert-custom { border-radius: 16px; padding: 14px 18px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 12px; border: none; animation: slideIn 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+.alert-custom .alert-close { margin-left: auto; background: none; border: none; font-size: 20px; cursor: pointer; opacity: 0.7; transition: opacity 0.2s ease; color: inherit; }
+.alert-custom .alert-close:hover { opacity: 1; }
+.alert-success-custom { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); color: #1b5e20; border-left: 4px solid #2e7d32; }
+.alert-error-custom { background: linear-gradient(135deg, #ffebee, #ffcdd2); color: #c62828; border-left: 4px solid #d32f2f; }
+.alert-warning-custom { background: linear-gradient(135deg, #fff8e1, #ffecb3); color: #e65100; border-left: 4px solid #ffc107; padding: 12px; border-radius: 12px; }
+.alert-info-custom { background: linear-gradient(135deg, #e3f2fd, #bbdef5); color: #01579b; border-left: 4px solid #0288d1; padding: 12px; border-radius: 12px; }
+.alert-expired-custom { background: linear-gradient(135deg, #fff8e1, #ffecb3); border-left: 4px solid #dc3545; border-radius: 12px; padding: 12px 16px; color: #856404; }
+.alert-wa-custom { position: relative; background: linear-gradient(135deg, #25D366, #128C7E); border-radius: 16px; padding: 15px 20px; border: none; box-shadow: 0 4px 15px rgba(37,211,102,0.3); }
+.alert-wa-custom .alert-wa-close { position: absolute; top: 12px; right: 15px; background: rgba(255,255,255,0.2); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.alert-wa-custom .alert-wa-close:hover { background: rgba(255,255,255,0.3); }
+.alert-terlambat-custom { position: relative; background: linear-gradient(135deg, #ffebee, #ffcdd2); border-left: 4px solid #dc3545; border-radius: 16px; padding: 15px 20px; }
+.alert-terlambat-custom .alert-terlambat-close { position: absolute; top: 12px; right: 15px; background: rgba(220,53,69,0.1); border: none; color: #dc3545; width: 28px; height: 28px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items-center; justify-content: center; transition: all 0.2s; }
+.alert-terlambat-custom .alert-terlambat-close:hover { background: rgba(220,53,69,0.2); }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+.hover-card { transition: all 0.3s ease; }
+.hover-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important; }
+.badge-status-warning { background: linear-gradient(135deg, #f57c00, #ef6c00); color: white; padding: 8px 16px; border-radius: 50px; font-weight: 600; display: inline-block; }
+.badge-status-primary { background: linear-gradient(135deg, #0d6efd, #0b5ed7); color: white; padding: 8px 16px; border-radius: 50px; font-weight: 600; display: inline-block; }
+.badge-status-danger { background: linear-gradient(135deg, #dc3545, #c82333); color: white; padding: 8px 16px; border-radius: 50px; font-weight: 600; display: inline-block; animation: pulse 1.5s infinite; }
+.badge-status-success { background: linear-gradient(135deg, #198754, #157347); color: white; padding: 8px 16px; border-radius: 50px; font-weight: 600; display: inline-block; }
+.badge-status-secondary { background: linear-gradient(135deg, #6c757d, #5a6268); color: white; padding: 8px 16px; border-radius: 50px; font-weight: 600; display: inline-block; }
+.badge-status-info { background: linear-gradient(135deg, #0dcaf0, #0bb5d8); color: black; padding: 8px 16px; border-radius: 50px; font-weight: 600; display: inline-block; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+.status-icon-success i { font-size: 3rem; color: #198754; }
+.status-icon-warning i { font-size: 3rem; color: #ffc107; }
+.sticky-lg-top { position: sticky; top: 20px; z-index: 10; }
+.table { border-radius: 16px; overflow: hidden; }
+.table th { font-weight: 600; }
+.bg-success-subtle { background: #e8f5e9 !important; }
 
-.container.position-relative {
-    position: relative;
-    z-index: 2;
-}
-
-.breadcrumb {
-    background: white !important;
-    border-radius: 50px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
-}
-
-.breadcrumb a {
-    font-weight: 500;
-}
-
-.breadcrumb a:hover {
-    color: #ffc107 !important;
-}
-
-.alert-custom {
-    border-radius: 16px;
-    padding: 14px 18px;
-    font-size: 14px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border: none;
-    animation: slideIn 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-}
-
-.alert-custom .alert-close {
-    margin-left: auto;
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    opacity: 0.7;
-    transition: opacity 0.2s ease;
-    color: inherit;
-}
-
-.alert-custom .alert-close:hover {
-    opacity: 1;
-}
-
-.alert-success-custom {
-    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-    color: #1b5e20;
-    border-left: 4px solid #2e7d32;
-}
-
-.alert-error-custom {
-    background: linear-gradient(135deg, #ffebee, #ffcdd2);
-    color: #c62828;
-    border-left: 4px solid #d32f2f;
-}
-
-.alert-warning-custom {
-    background: linear-gradient(135deg, #fff8e1, #ffecb3);
-    color: #e65100;
-    border-left: 4px solid #ffc107;
-    padding: 12px;
-    border-radius: 12px;
-}
-
-.alert-info-custom {
-    background: linear-gradient(135deg, #e3f2fd, #bbdef5);
-    color: #01579b;
-    border-left: 4px solid #0288d1;
-    padding: 12px;
-    border-radius: 12px;
-}
-
-/* 🔥 ALERT EXPIRED (KADALUARSA) */
-.alert-expired-custom {
-    background: linear-gradient(135deg, #fff8e1, #ffecb3);
-    border-left: 4px solid #dc3545;
-    border-radius: 12px;
-    padding: 12px 16px;
-    color: #856404;
-}
-
-.alert-wa-custom {
-    position: relative;
-    background: linear-gradient(135deg, #25D366, #128C7E);
-    border-radius: 16px;
-    padding: 15px 20px;
-    border: none;
-    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
-}
-
-.alert-wa-custom .alert-wa-close {
-    position: absolute;
-    top: 12px;
-    right: 15px;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    font-size: 18px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.alert-wa-custom .alert-wa-close:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.alert-terlambat-custom {
-    position: relative;
-    background: linear-gradient(135deg, #ffebee, #ffcdd2);
-    border-left: 4px solid #dc3545;
-    border-radius: 16px;
-    padding: 15px 20px;
-}
-
-.alert-terlambat-custom .alert-terlambat-close {
-    position: absolute;
-    top: 12px;
-    right: 15px;
-    background: rgba(220, 53, 69, 0.1);
-    border: none;
-    color: #dc3545;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    font-size: 18px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.alert-terlambat-custom .alert-terlambat-close:hover {
-    background: rgba(220, 53, 69, 0.2);
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.hover-card {
-    transition: all 0.3s ease;
-}
-
-.hover-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
-}
-
-.badge-status-warning {
-    background: linear-gradient(135deg, #f57c00, #ef6c00);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 50px;
-    font-weight: 600;
-    display: inline-block;
-}
-
-.badge-status-primary {
-    background: linear-gradient(135deg, #0d6efd, #0b5ed7);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 50px;
-    font-weight: 600;
-    display: inline-block;
-}
-
-.badge-status-danger {
-    background: linear-gradient(135deg, #dc3545, #c82333);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 50px;
-    font-weight: 600;
-    display: inline-block;
-    animation: pulse 1.5s infinite;
-}
-
-.badge-status-success {
-    background: linear-gradient(135deg, #198754, #157347);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 50px;
-    font-weight: 600;
-    display: inline-block;
-}
-
-.badge-status-secondary {
-    background: linear-gradient(135deg, #6c757d, #5a6268);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 50px;
-    font-weight: 600;
-    display: inline-block;
-}
-
-.badge-status-info {
-    background: linear-gradient(135deg, #0dcaf0, #0bb5d8);
-    color: black;
-    padding: 8px 16px;
-    border-radius: 50px;
-    font-weight: 600;
-    display: inline-block;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
-}
-
-.status-icon-success i {
-    font-size: 3rem;
-    color: #198754;
-}
-
-.status-icon-warning i {
-    font-size: 3rem;
-    color: #ffc107;
-}
-
-.status-icon-danger i {
-    font-size: 3rem;
-    color: #dc3545;
-}
-
-.sticky-lg-top {
-    position: sticky;
-    top: 20px;
-    z-index: 10;
-}
-
-.table {
-    border-radius: 16px;
-    overflow: hidden;
-}
-
-.table th {
-    font-weight: 600;
-}
-
-.bg-success-subtle {
-    background: #e8f5e9 !important;
-}
-
-/* Bank Card Styles */
+/* ============================================ */
+/* BANK CARD - PERBAIKAN WARNA TEKS TIDAK BIRU */
+/* ============================================ */
 .bank-card {
     transition: all 0.2s ease;
+    color: #1b5e20 !important;
 }
-
 .bank-card:hover {
     border-color: #ffc107 !important;
     background: #fffef5 !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
-
 .bank-card.selected {
     border-color: #2e7d32 !important;
     background: #f0fff0 !important;
 }
-
 .bank-card.selected .radio-check {
     border-color: #2e7d32 !important;
     background: #2e7d32 !important;
+    color: white;
 }
-
 .bank-card.selected .radio-check::after {
     content: "✓";
-    color: white;
     font-size: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
-    line-height: 1;
+}
+.bank-card * {
+    color: #1b5e20 !important;
+    text-decoration: none !important;
+}
+.bank-card .fw-bold {
+    color: #1b5e20 !important;
+}
+.bank-card div[style*="color: #6b7280;"],
+.bank-card div[style*="color: #9ca3af;"] {
+    color: #4b5563 !important;
 }
 
-/* Custom Toast */
-.custom-toast {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    min-width: 300px;
-    max-width: 450px;
-    background: white;
-    border-radius: 12px;
-    padding: 14px 18px;
+.bank-card-edit {
+    transition: all 0.2s ease;
+    color: #1b5e20 !important;
+}
+.bank-card-edit:hover {
+    border-color: #ffc107 !important;
+    background: #fffef5 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.bank-card-edit.selected {
+    border-color: #2e7d32 !important;
+    background: #f0fff0 !important;
+}
+.bank-card-edit.selected .radio-check-edit {
+    border-color: #2e7d32 !important;
+    background: #2e7d32 !important;
+    color: white;
+}
+.bank-card-edit.selected .radio-check-edit::after {
+    content: "✓";
+    font-size: 11px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    z-index: 100001;
-    transform: translateX(120%);
-    transition: transform 0.3s ease;
-    border-left: 4px solid;
+    justify-content: center;
+}
+.bank-card-edit * {
+    color: #1b5e20 !important;
+    text-decoration: none !important;
+}
+.bank-card-edit .fw-bold {
+    color: #1b5e20 !important;
+}
+.bank-card-edit div[style*="color: #6b7280;"],
+.bank-card-edit div[style*="color: #9ca3af;"] {
+    color: #4b5563 !important;
 }
 
-.custom-toast.show {
-    transform: translateX(0);
+/* ============================================ */
+/* MODAL OVERLAY & CONTENT - DIPERBAIKI        */
+/* ============================================ */
+.modal-overlay-custom {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    z-index: 99999;
+    overflow-y: auto;
+    padding: 20px 15px;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
 }
-
-.custom-toast.toast-success {
-    border-left-color: #2e7d32;
-    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+.modal-overlay-custom .modal-content-custom {
+    background: white;
+    border-radius: 24px;
+    max-width: 480px;
+    width: 100%;
+    margin: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
 }
-
-.custom-toast.toast-error {
-    border-left-color: #dc3545;
-    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+.modal-overlay-custom .modal-header-custom {
+    background: linear-gradient(135deg, #2e7d32, #1b5e20);
+    color: white;
+    padding: 14px 20px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
-
-.custom-toast .toast-icon i {
-    font-size: 24px;
+.modal-overlay-custom .modal-header-custom h5 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: white;
 }
-
-.custom-toast.toast-success .toast-icon i {
-    color: #2e7d32;
-}
-
-.custom-toast.toast-error .toast-icon i {
-    color: #dc3545;
-}
-
-.custom-toast .toast-content {
-    flex: 1;
-    font-size: 14px;
-    font-weight: 500;
-    color: #333;
-}
-
-.custom-toast .toast-close {
-    background: none;
+.modal-overlay-custom .modal-close-btn {
+    background: rgba(255,255,255,0.2);
     border: none;
-    font-size: 20px;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 18px;
     cursor: pointer;
-    opacity: 0.6;
-    transition: opacity 0.2s;
-    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.modal-overlay-custom .modal-close-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+.modal-overlay-custom .modal-body-custom {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+.modal-overlay-custom .modal-footer-sticky {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 10px 0 2px 0;
+    margin-top: 8px;
+    border-top: 1px solid #f0f0f0;
+    background: white;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+.modal-overlay-custom .btn-modal-cancel {
+    padding: 6px 16px;
+    border-radius: 50px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.75rem;
+}
+.modal-overlay-custom .btn-modal-submit {
+    padding: 6px 18px;
+    border-radius: 50px;
+    background: linear-gradient(135deg, #2e7d32, #1b5e20);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.75rem;
 }
 
-.custom-toast .toast-close:hover {
-    opacity: 1;
-}
-
-/* Modal Responsive */
-@media (max-width: 640px) {
-    #uploadModal>div>div {
-        max-width: 95% !important;
-        border-radius: 24px !important;
+/* Responsif layar kecil */
+@media (max-width: 576px) {
+    .modal-overlay-custom {
+        padding: 10px 8px;
     }
-    .bank-card {
-        padding: 10px 12px !important;
-        gap: 10px !important;
+    .modal-overlay-custom .modal-content-custom {
+        max-width: 100%;
+        border-radius: 18px;
+        max-height: 90vh;
     }
-    .custom-toast {
-        left: 20px;
-        right: 20px;
-        min-width: auto;
-        max-width: none;
+    .modal-overlay-custom .modal-header-custom {
+        padding: 12px 16px;
+    }
+    .modal-overlay-custom .modal-body-custom {
+        padding: 12px 16px;
+    }
+    .modal-overlay-custom .modal-footer-sticky {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .modal-overlay-custom .modal-footer-sticky button {
+        flex: 1 1 40%;
+        text-align: center;
+        justify-content: center;
+    }
+    .bank-card, .bank-card-edit {
+        padding: 8px 10px !important;
+        gap: 8px !important;
+    }
+    .bank-card > div:first-child, .bank-card-edit > div:first-child {
+        width: 30px !important;
+        height: 30px !important;
+    }
+    .bank-card > div:first-child img, .bank-card-edit > div:first-child img {
+        width: 22px !important;
+        height: 22px !important;
     }
 }
 
 @media (max-width: 768px) {
-    .sticky-lg-top {
-        position: relative;
-        top: 0;
-        margin-top: 20px;
-    }
-    .breadcrumb {
-        font-size: 0.8rem;
-        flex-wrap: wrap;
-    }
-    .table th,
-    .table td {
-        font-size: 0.8rem;
-        padding: 8px;
-    }
+    .sticky-lg-top { position: relative; top: 0; margin-top: 20px; }
+    .breadcrumb { font-size: 0.8rem; flex-wrap: wrap; }
+    .table th, .table td { font-size: 0.8rem; padding: 8px; }
 }
+
+/* override existing styles untuk modal overlay agar tidak konflik */
+#uploadModal, #editBuktiModal {
+    display: none;
+}
+
+.custom-toast { position: fixed; top: 20px; right: 20px; min-width: 300px; max-width: 450px; background: white; border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); z-index: 100001; transform: translateX(120%); transition: transform 0.3s ease; border-left: 4px solid; }
+.custom-toast.show { transform: translateX(0); }
+.custom-toast.toast-success { border-left-color: #2e7d32; background: linear-gradient(135deg, #e8f5e9, #c8e6c9); }
+.custom-toast.toast-error { border-left-color: #dc3545; background: linear-gradient(135deg, #ffebee, #ffcdd2); }
+.custom-toast .toast-icon i { font-size: 24px; }
+.custom-toast.toast-success .toast-icon i { color: #2e7d32; }
+.custom-toast.toast-error .toast-icon i { color: #dc3545; }
+.custom-toast .toast-content { flex: 1; font-size: 14px; font-weight: 500; color: #333; }
+.custom-toast .toast-close { background: none; border: none; font-size: 20px; cursor: pointer; opacity: 0.6; transition: opacity 0.2s; color: #333; }
+.custom-toast .toast-close:hover { opacity: 1; }
 </style>
 @endpush
 
@@ -926,9 +909,13 @@
 function openUploadModal() {
     var modal = document.getElementById('uploadModal');
     if (modal) {
-        modal.style.display = 'block';
+        if (modal.parentNode !== document.body) {
+            document.body.appendChild(modal);
+        }
+        modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         resetBankSelection();
+        modal.scrollTop = 0;
     }
 }
 
@@ -952,16 +939,141 @@ function resetBankSelection() {
     if (selectedBankId) selectedBankId.value = '';
 }
 
-// Tutup modal kalau klik di luar area modal
+// ============================================================
+// MODAL EDIT BUKTI - FUNGSI OPEN & CLOSE
+// ============================================================
+function openEditBuktiModal() {
+    var modal = document.getElementById('editBuktiModal');
+    if (modal) {
+        if (modal.parentNode !== document.body) {
+            document.body.appendChild(modal);
+        }
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        resetEditBankSelection();
+        modal.scrollTop = 0;
+    }
+}
+
+function closeEditBuktiModal() {
+    var modal = document.getElementById('editBuktiModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        resetEditBankSelection();
+    }
+}
+
+function resetEditBankSelection() {
+    var allCards = document.querySelectorAll('.bank-card-edit');
+    allCards.forEach(function(card) {
+        card.classList.remove('selected');
+    });
+    var bankInfo = document.getElementById('editSelectedBankInfo');
+    if (bankInfo) bankInfo.style.display = 'none';
+    var selectedBankId = document.getElementById('editSelectedBankId');
+    if (selectedBankId) selectedBankId.value = '';
+}
+
 window.onclick = function(event) {
     var modal = document.getElementById('uploadModal');
-    if (event.target == modal) {
-        closeUploadModal();
-    }
+    if (event.target == modal) { closeUploadModal(); }
     var cancelModal = document.getElementById('confirmCancelModal');
-    if (event.target == cancelModal) {
-        closeConfirmCancelModal();
+    if (event.target == cancelModal) { closeConfirmCancelModal(); }
+    var editModal = document.getElementById('editBuktiModal');
+    if (event.target == editModal) { closeEditBuktiModal(); }
+};
+
+// ============================================================
+// PILIH BANK DARI KARTU - UPLOAD
+// ============================================================
+function initBankCardSelection() {
+    var bankCards = document.querySelectorAll('.bank-card');
+    var selectedBankIdInput = document.getElementById('selectedBankId');
+    var selectedBankInfo = document.getElementById('selectedBankInfo');
+    var selectedBankLogo = document.getElementById('selectedBankLogo');
+    var selectedBankNama = document.getElementById('selectedBankNama');
+    var selectedBankNoRek = document.getElementById('selectedBankNoRek');
+    var selectedBankAtasNama = document.getElementById('selectedBankAtasNama');
+
+    function removeAllHighlights() {
+        bankCards.forEach(function(card) {
+            card.classList.remove('selected');
+        });
     }
+
+    function showSelectedBankInfo(card) {
+        var bankId = card.getAttribute('data-bank-id');
+        var bankNama = card.getAttribute('data-bank-nama');
+        var bankNoRek = card.getAttribute('data-bank-norek');
+        var bankAtasNama = card.getAttribute('data-bank-atas-nama');
+        var bankLogo = card.getAttribute('data-bank-logo');
+        if (selectedBankIdInput) selectedBankIdInput.value = bankId;
+        if (bankLogo && bankLogo !== '') {
+            selectedBankLogo.src = bankLogo;
+            selectedBankLogo.style.display = 'block';
+        } else {
+            selectedBankLogo.style.display = 'none';
+        }
+        selectedBankNama.innerText = bankNama;
+        selectedBankNoRek.innerText = bankNoRek;
+        selectedBankAtasNama.innerText = 'a.n. ' + bankAtasNama;
+        selectedBankInfo.style.display = 'block';
+    }
+
+    bankCards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            removeAllHighlights();
+            card.classList.add('selected');
+            showSelectedBankInfo(this);
+        });
+    });
+}
+
+// ============================================================
+// PILIH BANK DARI KARTU - EDIT
+// ============================================================
+function initEditBankCardSelection() {
+    var bankCards = document.querySelectorAll('.bank-card-edit');
+    var selectedBankIdInput = document.getElementById('editSelectedBankId');
+    var selectedBankInfo = document.getElementById('editSelectedBankInfo');
+    var selectedBankLogo = document.getElementById('editSelectedBankLogo');
+    var selectedBankNama = document.getElementById('editSelectedBankNama');
+    var selectedBankNoRek = document.getElementById('editSelectedBankNoRek');
+    var selectedBankAtasNama = document.getElementById('editSelectedBankAtasNama');
+
+    function removeAllHighlights() {
+        bankCards.forEach(function(card) {
+            card.classList.remove('selected');
+        });
+    }
+
+    function showSelectedBankInfo(card) {
+        var bankId = card.getAttribute('data-bank-id');
+        var bankNama = card.getAttribute('data-bank-nama');
+        var bankNoRek = card.getAttribute('data-bank-norek');
+        var bankAtasNama = card.getAttribute('data-bank-atas-nama');
+        var bankLogo = card.getAttribute('data-bank-logo');
+        if (selectedBankIdInput) selectedBankIdInput.value = bankId;
+        if (bankLogo && bankLogo !== '') {
+            selectedBankLogo.src = bankLogo;
+            selectedBankLogo.style.display = 'block';
+        } else {
+            selectedBankLogo.style.display = 'none';
+        }
+        selectedBankNama.innerText = bankNama;
+        selectedBankNoRek.innerText = bankNoRek;
+        selectedBankAtasNama.innerText = 'a.n. ' + bankAtasNama;
+        selectedBankInfo.style.display = 'block';
+    }
+
+    bankCards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            removeAllHighlights();
+            card.classList.add('selected');
+            showSelectedBankInfo(this);
+        });
+    });
 }
 
 // ============================================================
@@ -986,61 +1098,11 @@ function closeConfirmCancelModal() {
     pesananToCancel = null;
 }
 
-// Fungsi untuk membuka modal konfirmasi
 function batalkanPesanan(btn) {
     pesananToCancel = btn;
     openConfirmCancelModal();
 }
 
-// ============================================================
-// CUSTOM TOAST NOTIFICATION (MENGGANTI ALERT BAWAAN)
-// ============================================================
-function showCustomToast(type, message) {
-    // Buat elemen toast custom
-    var toastDiv = document.createElement('div');
-    toastDiv.className = 'custom-toast ' + (type === 'success' ? 'toast-success' : 'toast-error');
-
-    var icon = document.createElement('div');
-    icon.className = 'toast-icon';
-    icon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' :
-        '<i class="fas fa-exclamation-triangle"></i>';
-
-    var content = document.createElement('div');
-    content.className = 'toast-content';
-    content.innerText = message;
-
-    var closeBtn = document.createElement('button');
-    closeBtn.className = 'toast-close';
-    closeBtn.innerHTML = '&times;';
-    closeBtn.onclick = function() {
-        toastDiv.remove();
-    };
-
-    toastDiv.appendChild(icon);
-    toastDiv.appendChild(content);
-    toastDiv.appendChild(closeBtn);
-
-    document.body.appendChild(toastDiv);
-
-    // Animasi show
-    setTimeout(function() {
-        toastDiv.classList.add('show');
-    }, 10);
-
-    // Auto remove after 3 seconds
-    setTimeout(function() {
-        if (toastDiv.parentNode) {
-            toastDiv.classList.remove('show');
-            setTimeout(function() {
-                if (toastDiv.parentNode) toastDiv.remove();
-            }, 300);
-        }
-    }, 3000);
-}
-
-// ============================================================
-// EVENT LISTENER UNTUK TOMBOL KONFIRMASI BATALKAN (SATU KALI)
-// ============================================================
 document.getElementById('confirmCancelBtn')?.addEventListener('click', function() {
     if (pesananToCancel) {
         const btn = pesananToCancel;
@@ -1049,111 +1111,114 @@ document.getElementById('confirmCancelBtn')?.addEventListener('click', function(
         btn.disabled = true;
 
         fetch('{{ route("pelanggan.pesanan.batalkan", $pesanan->id) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                closeConfirmCancelModal();
-                if (data.success) {
-                    showCustomToast('success', data.message);
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    showCustomToast('error', data.message || 'Gagal membatalkan pesanan');
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                closeConfirmCancelModal();
-                showCustomToast('error', 'Terjadi kesalahan. Silakan coba lagi.');
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            closeConfirmCancelModal();
+            if (data.success) {
+                showCustomToast('success', data.message);
+                setTimeout(function() { location.reload(); }, 1500);
+            } else {
+                showCustomToast('error', data.message || 'Gagal membatalkan pesanan');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-            });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            closeConfirmCancelModal();
+            showCustomToast('error', 'Terjadi kesalahan. Silakan coba lagi.');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
     }
 });
 
 // ============================================================
-// PILIH BANK DARI KARTU
+// CUSTOM TOAST NOTIFICATION
 // ============================================================
-function initBankCardSelection() {
-    var bankCards = document.querySelectorAll('.bank-card');
-    var selectedBankIdInput = document.getElementById('selectedBankId');
-    var selectedBankInfo = document.getElementById('selectedBankInfo');
-    var selectedBankLogo = document.getElementById('selectedBankLogo');
-    var selectedBankNama = document.getElementById('selectedBankNama');
-    var selectedBankNoRek = document.getElementById('selectedBankNoRek');
-    var selectedBankAtasNama = document.getElementById('selectedBankAtasNama');
-
-    function removeAllHighlights() {
-        bankCards.forEach(function(card) {
-            card.classList.remove('selected');
-        });
-    }
-
-    function showSelectedBankInfo(card) {
-        var bankId = card.getAttribute('data-bank-id');
-        var bankNama = card.getAttribute('data-bank-nama');
-        var bankNoRek = card.getAttribute('data-bank-norek');
-        var bankAtasNama = card.getAttribute('data-bank-atas-nama');
-        var bankLogo = card.getAttribute('data-bank-logo');
-
-        if (selectedBankIdInput) selectedBankIdInput.value = bankId;
-
-        if (bankLogo && bankLogo !== '') {
-            selectedBankLogo.src = bankLogo;
-            selectedBankLogo.style.display = 'block';
-        } else {
-            selectedBankLogo.style.display = 'none';
+function showCustomToast(type, message) {
+    var toastDiv = document.createElement('div');
+    toastDiv.className = 'custom-toast ' + (type === 'success' ? 'toast-success' : 'toast-error');
+    var icon = document.createElement('div');
+    icon.className = 'toast-icon';
+    icon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-triangle"></i>';
+    var content = document.createElement('div');
+    content.className = 'toast-content';
+    content.innerText = message;
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'toast-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.onclick = function() { toastDiv.remove(); };
+    toastDiv.appendChild(icon);
+    toastDiv.appendChild(content);
+    toastDiv.appendChild(closeBtn);
+    document.body.appendChild(toastDiv);
+    setTimeout(function() { toastDiv.classList.add('show'); }, 10);
+    setTimeout(function() {
+        if (toastDiv.parentNode) {
+            toastDiv.classList.remove('show');
+            setTimeout(function() { toastDiv.remove(); }, 300);
         }
-
-        selectedBankNama.innerText = bankNama;
-        selectedBankNoRek.innerText = bankNoRek;
-        selectedBankAtasNama.innerText = 'a.n. ' + bankAtasNama;
-        selectedBankInfo.style.display = 'block';
-    }
-
-    bankCards.forEach(function(card) {
-        card.addEventListener('click', function() {
-            removeAllHighlights();
-            card.classList.add('selected');
-            showSelectedBankInfo(this);
-        });
-    });
+    }, 3000);
 }
 
 // ============================================================
-// FORM UPLOAD BUKTI - VALIDASI
+// VALIDASI FORM UPLOAD
 // ============================================================
 document.getElementById('formUploadBukti')?.addEventListener('submit', function(e) {
     var selectedBankId = document.getElementById('selectedBankId');
     var fileInput = document.getElementById('bukti_pembayaran');
-
     if (!selectedBankId || !selectedBankId.value) {
         e.preventDefault();
         showCustomToast('error', 'Silakan pilih bank tujuan terlebih dahulu!');
         return false;
     }
-
     if (fileInput && fileInput.files.length > 0) {
         var file = fileInput.files[0];
         var validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
         var maxSize = 2 * 1024 * 1024;
-
         if (!validTypes.includes(file.type)) {
             e.preventDefault();
             showCustomToast('error', 'Format file harus JPG, JPEG, atau PNG!');
             return false;
         }
+        if (file.size > maxSize) {
+            e.preventDefault();
+            showCustomToast('error', 'Ukuran file maksimal 2MB!');
+            return false;
+        }
+    } else {
+        e.preventDefault();
+        showCustomToast('error', 'Silakan pilih file bukti pembayaran!');
+        return false;
+    }
+});
 
+document.getElementById('formEditBukti')?.addEventListener('submit', function(e) {
+    var selectedBankId = document.getElementById('editSelectedBankId');
+    var fileInput = document.getElementById('edit_bukti_pembayaran');
+    if (!selectedBankId || !selectedBankId.value) {
+        e.preventDefault();
+        showCustomToast('error', 'Silakan pilih bank tujuan terlebih dahulu!');
+        return false;
+    }
+    if (fileInput && fileInput.files.length > 0) {
+        var file = fileInput.files[0];
+        var validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        var maxSize = 2 * 1024 * 1024;
+        if (!validTypes.includes(file.type)) {
+            e.preventDefault();
+            showCustomToast('error', 'Format file harus JPG, JPEG, atau PNG!');
+            return false;
+        }
         if (file.size > maxSize) {
             e.preventDefault();
             showCustomToast('error', 'Ukuran file maksimal 2MB!');
@@ -1171,6 +1236,7 @@ document.getElementById('formUploadBukti')?.addEventListener('submit', function(
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
     initBankCardSelection();
+    initEditBankCardSelection();
 });
 </script>
 @endpush

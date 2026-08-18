@@ -58,13 +58,13 @@
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
-                            <th style="width: 5%">No</th>
-                            <th style="width: 12%">Nomor Pesanan</th>
-                            <th>Detail Produk</th>
-                            <th style="width: 22%">Waktu Produksi</th>
-                            <th style="width: 15%">Waktu Pengambilan</th>
-                            <th style="width: 10%">Status</th>
-                            <th style="width: 8%">Aksi</th>
+                            <th style="width: 5%" class="text-center">No</th>
+                            <th style="width: 12%" class="text-center">Nomor Pesanan</th>
+                            <th class="text-center">Detail Produk</th>
+                            <th style="width: 22%" class="text-center">Waktu Produksi</th>
+                            <th style="width: 15%" class="text-center">Waktu Pengambilan</th>
+                            <th style="width: 10%" class="text-center">Status</th>
+                            <th style="width: 8%" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>

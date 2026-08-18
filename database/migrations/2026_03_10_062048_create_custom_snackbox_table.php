@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             
             // Ukuran langsung disimpan di sini (tanpa tabel terpisah)
-            $table->enum('kode_ukuran', ['A', 'B', 'C'])->default('B');
+            $table->enum('kode_ukuran', ['A', 'B', 'C','D','E','F'])->default('B');
             $table->integer('jumlah_item'); // 5, 7, atau 10 sesuai kode_ukuran
             $table->string('nama_box')->nullable();
             $table->integer('total_item'); // total item dalam 1 box (sama dengan jumlah_item)

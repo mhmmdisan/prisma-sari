@@ -56,12 +56,12 @@
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
-                            <th style="width: 18%">Nomor Pesanan</th>
-                            <th style="width: 20%">Pelanggan</th>
-                            <th style="width: 15%">Total</th>
-                            <th style="width: 15%">Status Pesanan</th>
-                            <th style="width: 15%">Status Pembayaran</th>
-                            <th style="width: 12%">Tanggal</th>
+                            <th style="width: 18%" class="text-center">Nomor Pesanan</th>
+                            <th style="width: 20%" class="text-center">Pelanggan</th>
+                            <th style="width: 15%" class="text-center">Total</th>
+                            <th style="width: 15%" class="text-center">Status Pesanan</th>
+                            <th style="width: 15%" class="text-center">Status Pembayaran</th>
+                            <th style="width: 12%" class="text-center">Tanggal</th>
                             <th style="width: 5%" class="text-center">Aksi</th>
                         <tr>
                     </thead>

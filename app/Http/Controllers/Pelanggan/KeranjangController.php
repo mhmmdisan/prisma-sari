@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Pelanggan;
 use App\Http\Controllers\Controller;
 use App\Models\Produk;
 use App\Models\KeranjangDetail;
-use App\Models\CustomSnackbox;  
+use App\Models\CustomSnackbox;
+use App\Models\TanggalNonaktif; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,13 +26,10 @@ class KeranjangController extends Controller
             
             $total = $keranjang->sum('subtotal');
 
-            $tanggalNonaktifList = DB::table('tanggal_nonaktif')
-                ->where('status', 'nonaktif')
+            // Ambil data tanggal nonaktif dengan keterangan
+            $tanggalNonaktifList = TanggalNonaktif::nonaktif()
                 ->where('tanggal', '>=', now()->subDays(1)->format('Y-m-d'))
-                ->pluck('tanggal')
-                ->toArray();   
-        
-            \Log::info('Tanggal Nonaktif:', $tanggalNonaktifList);
+                ->get(['tanggal', 'keterangan']);
              
             return view('pelanggan.keranjang', compact('keranjang', 'total', 'tanggalNonaktifList'));
             
@@ -59,8 +57,6 @@ class KeranjangController extends Controller
                 'produk_id' => 'required|exists:produk,id',
                 'jumlah' => 'required|integer|min:1',
             ]);
-            
-            Log::info('Tambah produk ke keranjang', $request->all());
             
             $produk = Produk::with('kategori')->findOrFail($request->produk_id);
             $kategori = $produk->kategori->nama_kategori ?? 'Unknown';
@@ -123,7 +119,6 @@ class KeranjangController extends Controller
             
         } catch (\Exception $e) {
             Log::error('Error tambahProduk: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => false, 
                 'message' => 'Terjadi kesalahan pada server: ' . $e->getMessage()

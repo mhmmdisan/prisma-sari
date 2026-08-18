@@ -110,14 +110,14 @@
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
-                            <th style="width: 5%">No</th>
-                            <th>Nama</th>
-                            <th>Email</th>
-                            <th>No. Telepon</th>
-                            <th style="width: 10%">Role</th>
-                            <th>Alamat</th>
-                            <th style="width: 10%">Dibuat</th>
-                            <th style="width: 10%">Aksi</th>
+                            <th style="width: 5%" class="text-center">No</th>
+                            <th class="text-center">Nama</th>
+                            <th class="text-center">Email</th>
+                            <th class="text-center">No. Telepon</th>
+                            <th style="width: 10%" class="text-center">Role</th>
+                            <th class="text-center">Alamat</th>
+                            <th style="width: 10%" class="text-center">Dibuat</th>
+                            <th style="width: 10%" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>

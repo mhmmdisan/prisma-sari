@@ -66,14 +66,16 @@
                             <div class="info-label"><i class="bi bi-calendar-plus text-success"></i> Tanggal Pesan</div>
                             <div class="info-value">
                                 {{ \Carbon\Carbon::parse($pesanan->created_at)->locale('id')->translatedFormat('d F Y H:i') }}
-                                WIB</div>
+                                WIB
+                            </div>
                         </div>
                         <div class="info-row">
                             <div class="info-label"><i class="bi bi-calendar-event text-warning"></i> Tanggal
                                 Pengambilan</div>
                             <div class="info-value">
                                 {{ $pesanan->tanggal_pengambilan ? \Carbon\Carbon::parse($pesanan->tanggal_pengambilan)->locale('id')->translatedFormat('d F Y H:i') : '-' }}
-                                WIB</div>
+                                WIB
+                            </div>
                         </div>
                         <div class="info-row">
                             <div class="info-label"><i class="bi bi-geo-alt text-danger"></i> Alamat Pengiriman</div>
@@ -140,14 +142,20 @@
                             <div class="info-label"><i class="bi bi-image text-info"></i> Bukti Pembayaran</div>
                             <div class="info-value">
                                 @php
-                                $buktiPath = $pesanan->bukti_pembayaran;
-                                if (str_starts_with($buktiPath, 'public/')) {
-                                $buktiPath = str_replace('public/', '', $buktiPath);
-                                }
-                                if (!str_starts_with($buktiPath, 'storage/')) {
-                                $buktiPath = 'storage/' . $buktiPath;
-                                }
-                                $fileExists = file_exists(public_path($buktiPath));
+                                    $buktiPath = $pesanan->bukti_pembayaran;
+
+                                    // Jika path dimulai dengan 'public/', hilangkan prefix
+                                    if (str_starts_with($buktiPath, 'public/')) {
+                                        $buktiPath = str_replace('public/', '', $buktiPath);
+                                    }
+
+                                    // Jika belum ada prefix 'storage/', tambahkan
+                                    if (!str_starts_with($buktiPath, 'storage/')) {
+                                        $buktiPath = 'storage/' . $buktiPath;
+                                    }
+
+                                    // Cek apakah file benar-benar ada
+                                    $fileExists = file_exists(public_path($buktiPath));
                                 @endphp
 
                                 @if($fileExists)
@@ -165,6 +173,13 @@
                                     ditemukan.
                                 </div>
                                 @endif
+                            </div>
+                        </div>
+                        @else
+                        <div class="info-row">
+                            <div class="info-label"><i class="bi bi-image text-muted"></i> Bukti Pembayaran</div>
+                            <div class="info-value text-muted">
+                                <i class="bi bi-info-circle me-1"></i> Belum ada bukti pembayaran
                             </div>
                         </div>
                         @endif

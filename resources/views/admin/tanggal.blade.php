@@ -9,7 +9,7 @@
         <div>
             <h2 class="page-title fw-bold mb-1">
                 <i class="bi bi-calendar-x me-2" style="color: #ffc107;"></i>
-                Kelola Tanggal Produksi
+                Kelola Tanggal Pesanan
             </h2>
             <p class="text-muted mb-0">Atur tanggal nonaktif untuk produksi catering</p>
         </div>
@@ -78,10 +78,11 @@
                         <table class="table table-hover mb-0">
                             <thead>
                                 <tr>
-                                    <th style="width: 5%">No</th>
-                                    <th style="width: 35%">Tanggal</th>
-                                    <th>Keterangan</th>
-                                    <th style="width: 15%">Aksi</th>
+                                    <th style="width: 5%" class="text-center">No</th>
+                                    <th style="width: 28%" class="text-center">Tanggal</th>
+                                    <th style="width: 22%" class="text-center">Keterangan</th>
+                                    <th style="width: 25%" class="text-center">Penanggung Jawab</th> <!-- Kolom baru -->
+                                    <th style="width: 15%" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -111,6 +112,16 @@
                                         @endif
                                     </td>
                                     <td class="align-middle">
+                                        @if($item->createdBy)
+                                        <span class="badge bg-light text-dark border border-1 border-secondary-subtle rounded-pill px-3 py-2">
+                                            <i class="bi bi-person-circle me-1"></i>
+                                            {{ $item->createdBy->name }}
+                                        </span>
+                                        @else
+                                        <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="align-middle">
                                         <button class="btn-aktifkan"
                                             onclick="openAktifkanModal({{ $item->id }}, '{{ \Carbon\Carbon::parse($item->tanggal)->locale('id')->translatedFormat('l, d F Y') }}')">
                                             <i class="bi bi-toggle-on me-1"></i> Aktifkan
@@ -120,7 +131,7 @@
                                 @endif
                                 @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-5">
+                                    <td colspan="5" class="text-center py-5">
                                         <div class="empty-state">
                                             <i class="bi bi-calendar-check fs-1" style="color: #2e7d32;"></i>
                                             <p class="mt-3 fw-semibold" style="color: #2e7d32;">Semua Tanggal Aktif</p>
